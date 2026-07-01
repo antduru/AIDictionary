@@ -13,8 +13,8 @@ export function MapView({ entries, relations, query, onSelectEntry }: MapViewPro
   const entryById = new Map(entries.map((entry) => [entry.id, entry]));
   const visibleEntries = entries.filter((entry) => matchesQuery(entry, query));
   const visibleIds = new Set(visibleEntries.map((entry) => entry.id));
-  const visibleRelations = relations.filter(
-    (relation) => visibleIds.has(relation.fromEntryId) || visibleIds.has(relation.toEntryId),
+  const groupedEntries = visibleEntries.filter((entry) =>
+    relations.some((relation) => relation.fromEntryId === entry.id || relation.toEntryId === entry.id),
   );
 
   return (
@@ -26,49 +26,78 @@ export function MapView({ entries, relations, query, onSelectEntry }: MapViewPro
         </div>
       </div>
 
-      <div className="map-layout">
-        <div className="node-grid" aria-label="Entry nodes">
-          {visibleEntries.length === 0 ? (
+      <div className="map-layout map-layout--wide">
+        <div className="connection-groups" aria-label="Grouped conceptual relations">
+          {groupedEntries.length === 0 ? (
             <div className="empty-panel">
-              <h2>No nodes found</h2>
-              <p>Search for a different entry or clear the search field.</p>
+              <h2>No connections found</h2>
+              <p>Add typed relations from the right panel to build the atlas map.</p>
             </div>
           ) : (
-            visibleEntries.map((entry) => (
-              <button className="node-card" type="button" key={entry.id} onClick={() => onSelectEntry(entry.id)}>
-                <span>{entry.entryType}</span>
-                <strong>{entry.title}</strong>
-                <small>{entry.category || "Uncategorized"}</small>
-              </button>
-            ))
+            groupedEntries.map((source) => {
+              const outgoing = relations.filter(
+                (relation) => relation.fromEntryId === source.id && visibleIds.has(relation.toEntryId),
+              );
+              const incoming = relations.filter(
+                (relation) => relation.toEntryId === source.id && visibleIds.has(relation.fromEntryId),
+              );
+              return (
+                <article className="connection-group" key={source.id}>
+                  <button className="connection-source" type="button" onClick={() => onSelectEntry(source.id)}>
+                    <span>{source.entryType}</span>
+                    <strong>{source.title}</strong>
+                    <small>{source.category || "Uncategorized"}</small>
+                  </button>
+
+                  <div className="connection-rows">
+                    {outgoing.map((relation) => {
+                      const target = entryById.get(relation.toEntryId);
+                      return (
+                        <div className="connection-row" key={relation.id}>
+                          <button type="button" onClick={() => onSelectEntry(source.id)}>
+                            {source.title}
+                          </button>
+                          <span>{relation.relationType}</span>
+                          <button type="button" onClick={() => target && onSelectEntry(target.id)}>
+                            {target?.title ?? "Missing entry"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {incoming.map((relation) => {
+                      const incomingSource = entryById.get(relation.fromEntryId);
+                      return (
+                        <div className="connection-row connection-row--incoming" key={relation.id}>
+                          <button type="button" onClick={() => incomingSource && onSelectEntry(incomingSource.id)}>
+                            {incomingSource?.title ?? "Missing entry"}
+                          </button>
+                          <span>{relation.relationType}</span>
+                          <button type="button" onClick={() => onSelectEntry(source.id)}>
+                            {source.title}
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {outgoing.length === 0 && incoming.length === 0 ? (
+                      <p className="muted">No visible relations for this search.</p>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })
           )}
         </div>
 
         <div className="connections-list">
           <div className="context-section-title">
             <GitBranch size={16} />
-            <h3>Connections</h3>
+            <h3>Relation Types</h3>
           </div>
-
-          {visibleRelations.length === 0 ? (
-            <p className="muted">No related-entry connections yet.</p>
-          ) : (
-            visibleRelations.map((relation) => {
-              const from = entryById.get(relation.fromEntryId);
-              const to = entryById.get(relation.toEntryId);
-              return (
-                <div className="connection-row" key={relation.id}>
-                  <button type="button" onClick={() => from && onSelectEntry(from.id)}>
-                    {from?.title ?? "Missing entry"}
-                  </button>
-                  <span>{relation.relationType}</span>
-                  <button type="button" onClick={() => to && onSelectEntry(to.id)}>
-                    {to?.title ?? "Missing entry"}
-                  </button>
-                </div>
-              );
-            })
-          )}
+          {Array.from(new Set(relations.map((relation) => relation.relationType))).map((type) => (
+            <span className="relation-type-pill" key={type}>
+              {type}
+            </span>
+          ))}
         </div>
       </div>
     </section>

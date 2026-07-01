@@ -4,6 +4,16 @@ Lexicon OS is a local-first personal knowledge atlas. The MVP uses a Tauri deskt
 
 No AI features are included in this MVP. There are no LLM calls, embeddings, semantic search, cloud sync, or remote services.
 
+Current organization primitives:
+
+- Flexible block-based content for entries and mini-book pages
+- Custom typed relations between entries
+- Automatic backlinks derived from relations
+- Manual knowledge gaps with open/resolved status
+- Trails for ordered learning, reading, or argument routes
+- Timeline metadata and a Timeline view
+- Atlas, Library, Map, Timeline, Trails, and Settings lenses from the left sidebar
+
 ## Install
 
 Prerequisites:
@@ -53,4 +63,4 @@ Lexicon OS treats a personal knowledge base as an atlas book:
 - The left sidebar switches between Atlas, Library, Map, and Settings.
 - The right panel stays contextual with manually curated related entries and knowledge gaps.
 
-The data model is intentionally flexible. Entries support Markdown notes, optional categories, tags, manual relations, and manual knowledge gaps without requiring a strict definition/example/source template.
+The data model is intentionally flexible. Entries support ordered content blocks, Markdown blocks, optional categories, tags, manual relations, trails, timeline metadata, and manual knowledge gaps without requiring a strict definition/example/source template.

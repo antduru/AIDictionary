@@ -10,15 +10,28 @@ export function AlphabetTabs({ activeLetter, counts, onChange }: AlphabetTabsPro
   return (
     <div className="alphabet-tabs" aria-label="Alphabet page dividers">
       {alphabetTabs.map((letter) => (
-        <button
-          key={letter}
-          type="button"
-          className={activeLetter === letter ? "alphabet-tab alphabet-tab--active" : "alphabet-tab"}
-          onClick={() => onChange(letter)}
-          title={`${letter}: ${counts[letter] ?? 0} entries`}
-        >
-          {letter}
-        </button>
+        (() => {
+          const count = counts[letter] ?? 0;
+          const isDisabled = letter !== "All" && count === 0;
+          return (
+            <button
+              key={letter}
+              type="button"
+              className={[
+                "alphabet-tab",
+                activeLetter === letter ? "alphabet-tab--active" : "",
+                isDisabled ? "alphabet-tab--disabled" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() => onChange(letter)}
+              title={`${letter}: ${count} entries`}
+              disabled={isDisabled}
+            >
+              {letter}
+            </button>
+          );
+        })()
       ))}
     </div>
   );

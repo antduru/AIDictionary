@@ -1,4 +1,4 @@
-import { BookOpen, Library, Map, Settings } from "lucide-react";
+import { BookOpen, Library, Map, Route, Settings, Timer } from "lucide-react";
 import type { AppView } from "../types";
 
 interface SidebarProps {
@@ -10,6 +10,8 @@ const navItems: Array<{ view: AppView; label: string; icon: typeof BookOpen }> =
   { view: "atlas", label: "Atlas", icon: BookOpen },
   { view: "library", label: "Library", icon: Library },
   { view: "map", label: "Map", icon: Map },
+  { view: "timeline", label: "Timeline", icon: Timer },
+  { view: "trails", label: "Trails", icon: Route },
   { view: "settings", label: "Settings", icon: Settings },
 ];
 

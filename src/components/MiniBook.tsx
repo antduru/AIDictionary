@@ -1,20 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import { ArrowLeft, Edit3, FilePlus2, Save, Trash2 } from "lucide-react";
-import type { BookPage, BookPageInput, Entry } from "../types";
+import type { BookPage, BookPageInput, ContentBlock, ContentBlockInput, Entry } from "../types";
+import { BlockEditor } from "./BlockEditor";
+import { BlockRenderer } from "./BlockRenderer";
+import { blocksToInputs, ownerBlocks, projectBlocksToContent } from "../utils/blocks";
 
 interface MiniBookProps {
   entry: Entry;
   pages: BookPage[];
+  contentBlocks: ContentBlock[];
   onBack: () => void;
   onCreatePage: (input: BookPageInput) => Promise<void>;
-  onUpdatePage: (pageId: string, input: BookPageInput) => Promise<void>;
+  onUpdatePage: (pageId: string, input: BookPageInput, blocks: ContentBlockInput[]) => Promise<void>;
   onDeletePage: (pageId: string) => Promise<void>;
 }
 
 export function MiniBook({
   entry,
   pages,
+  contentBlocks,
   onBack,
   onCreatePage,
   onUpdatePage,
@@ -91,11 +95,12 @@ export function MiniBook({
         {selectedPage ? (
           <MiniBookPage
             page={selectedPage}
+            blocks={ownerBlocks(contentBlocks, "book_page", selectedPage.id)}
             isEditing={isEditingPage}
             onEdit={() => setIsEditingPage(true)}
             onCancel={() => setIsEditingPage(false)}
-            onSave={async (input) => {
-              await onUpdatePage(selectedPage.id, input);
+            onSave={async (input, blocks) => {
+              await onUpdatePage(selectedPage.id, input, blocks);
               setIsEditingPage(false);
             }}
             onDelete={async () => {
@@ -117,22 +122,25 @@ export function MiniBook({
 
 interface MiniBookPageProps {
   page: BookPage;
+  blocks: ContentBlock[];
   isEditing: boolean;
   onEdit: () => void;
   onCancel: () => void;
-  onSave: (input: BookPageInput) => Promise<void>;
+  onSave: (input: BookPageInput, blocks: ContentBlockInput[]) => Promise<void>;
   onDelete: () => Promise<void>;
 }
 
-function MiniBookPage({ page, isEditing, onEdit, onCancel, onSave, onDelete }: MiniBookPageProps) {
+function MiniBookPage({ page, blocks, isEditing, onEdit, onCancel, onSave, onDelete }: MiniBookPageProps) {
   const [title, setTitle] = useState(page.title);
-  const [content, setContent] = useState(page.content);
+  const [draftBlocks, setDraftBlocks] = useState<ContentBlockInput[]>(() =>
+    blocksToInputs(blocks, page.content),
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setTitle(page.title);
-    setContent(page.content);
-  }, [page]);
+    setDraftBlocks(blocksToInputs(blocks, page.content));
+  }, [page, blocks]);
 
   if (isEditing) {
     return (
@@ -142,12 +150,13 @@ function MiniBookPage({ page, isEditing, onEdit, onCancel, onSave, onDelete }: M
           event.preventDefault();
           setIsSaving(true);
           try {
+            const projectedContent = projectBlocksToContent(draftBlocks);
             await onSave({
               entryId: page.entryId,
               title: title.trim() || "Untitled Page",
-              content,
+              content: projectedContent,
               pageOrder: page.pageOrder,
-            });
+            }, draftBlocks);
           } finally {
             setIsSaving(false);
           }
@@ -157,10 +166,7 @@ function MiniBookPage({ page, isEditing, onEdit, onCancel, onSave, onDelete }: M
           <span>Page title</span>
           <input value={title} onChange={(event) => setTitle(event.target.value)} />
         </label>
-        <label className="field markdown-field">
-          <span>Markdown</span>
-          <textarea value={content} onChange={(event) => setContent(event.target.value)} />
-        </label>
+        <BlockEditor blocks={draftBlocks} onChange={setDraftBlocks} />
         <div className="editor-actions">
           <button className="button button--primary" type="submit" disabled={isSaving}>
             <Save size={16} />
@@ -190,13 +196,7 @@ function MiniBookPage({ page, isEditing, onEdit, onCancel, onSave, onDelete }: M
           </button>
         </div>
       </div>
-      <div className="markdown-body">
-        {page.content.trim() ? (
-          <ReactMarkdown>{page.content}</ReactMarkdown>
-        ) : (
-          <p className="muted">This page is empty.</p>
-        )}
-      </div>
+      <BlockRenderer blocks={blocks} legacyContent={page.content} />
     </article>
   );
 }

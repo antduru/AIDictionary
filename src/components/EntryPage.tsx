@@ -1,20 +1,22 @@
-import ReactMarkdown from "react-markdown";
 import { BookOpen, Edit3, Trash2 } from "lucide-react";
-import type { Entry, EntryInput } from "../types";
+import type { ContentBlock, ContentBlockInput, Entry, EntryInput } from "../types";
 import { EntryEditor } from "./EntryEditor";
+import { BlockRenderer } from "./BlockRenderer";
 
 interface EntryPageProps {
   entry: Entry | null;
+  blocks: ContentBlock[];
   isEditing: boolean;
   onStartEdit: () => void;
   onCancelEdit: () => void;
-  onSave: (input: EntryInput) => Promise<void>;
+  onSave: (input: EntryInput, blocks: ContentBlockInput[]) => Promise<void>;
   onDelete: () => Promise<void>;
   onOpenBook: () => void;
 }
 
 export function EntryPage({
   entry,
+  blocks,
   isEditing,
   onStartEdit,
   onCancelEdit,
@@ -33,7 +35,7 @@ export function EntryPage({
   }
 
   if (isEditing) {
-    return <EntryEditor entry={entry} onSave={onSave} onCancel={onCancelEdit} />;
+    return <EntryEditor entry={entry} blocks={blocks} onSave={onSave} onCancel={onCancelEdit} />;
   }
 
   return (
@@ -60,6 +62,7 @@ export function EntryPage({
 
       <div className="entry-meta-line">
         {entry.category ? <span>{entry.category}</span> : <span>Uncategorized</span>}
+        {entry.timelineDate ? <span className="timeline-chip">{entry.timelineDate}</span> : null}
         {entry.tags.map((tag) => (
           <span className="tag" key={tag}>
             {tag}
@@ -74,13 +77,7 @@ export function EntryPage({
         </button>
       ) : null}
 
-      <div className="markdown-body">
-        {entry.content.trim() ? (
-          <ReactMarkdown>{entry.content}</ReactMarkdown>
-        ) : (
-          <p className="muted">No notes yet. Switch to edit mode to add flexible Markdown content.</p>
-        )}
-      </div>
+      <BlockRenderer blocks={blocks} legacyContent={entry.content} />
     </article>
   );
 }

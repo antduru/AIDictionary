@@ -1,4 +1,4 @@
-import type { Entry, EntryInput } from "../types";
+import type { ContentBlock, ContentBlockInput, Entry, EntryInput } from "../types";
 import { getEntryLetter } from "../utils/filters";
 import { AlphabetTabs } from "./AlphabetTabs";
 import { EntryPage } from "./EntryPage";
@@ -6,6 +6,7 @@ import { EntryPage } from "./EntryPage";
 interface AtlasBookProps {
   entries: Entry[];
   selectedEntry: Entry | null;
+  selectedEntryBlocks: ContentBlock[];
   activeLetter: string;
   isEditing: boolean;
   onLetterChange: (letter: string) => void;
@@ -13,13 +14,14 @@ interface AtlasBookProps {
   onOpenBook: (entryId: string) => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
-  onSaveEntry: (entryId: string, input: EntryInput) => Promise<void>;
+  onSaveEntry: (entryId: string, input: EntryInput, blocks: ContentBlockInput[]) => Promise<void>;
   onDeleteEntry: (entryId: string) => Promise<void>;
 }
 
 export function AtlasBook({
   entries,
   selectedEntry,
+  selectedEntryBlocks,
   activeLetter,
   isEditing,
   onLetterChange,
@@ -89,10 +91,11 @@ export function AtlasBook({
       <div className="book-page book-page--right">
         <EntryPage
           entry={selectedEntry}
+          blocks={selectedEntryBlocks}
           isEditing={isEditing}
           onStartEdit={onStartEdit}
           onCancelEdit={onCancelEdit}
-          onSave={(input) => selectedEntry ? onSaveEntry(selectedEntry.id, input) : Promise.resolve()}
+          onSave={(input, blocks) => selectedEntry ? onSaveEntry(selectedEntry.id, input, blocks) : Promise.resolve()}
           onDelete={() => selectedEntry ? onDeleteEntry(selectedEntry.id) : Promise.resolve()}
           onOpenBook={() => selectedEntry ? onOpenBook(selectedEntry.id) : undefined}
         />

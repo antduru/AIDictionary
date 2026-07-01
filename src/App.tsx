@@ -7,30 +7,40 @@ import { MiniBook } from "./components/MiniBook";
 import { RightContextPanel } from "./components/RightContextPanel";
 import { SettingsView } from "./components/SettingsView";
 import { Sidebar } from "./components/Sidebar";
+import { TimelineView } from "./components/TimelineView";
 import { TopBar } from "./components/TopBar";
+import { TrailsView } from "./components/TrailsView";
 import { lexiconRepository } from "./services/lexiconRepository";
 import type {
   AppData,
   AppView,
+  ContentBlockInput,
   BookPageInput,
   EntryInput,
   EntryType,
   KnowledgeGapInput,
   RelationInput,
+  TrailInput,
+  TrailItemInput,
 } from "./types";
 import { matchesLetter, matchesQuery } from "./utils/filters";
+import { ownerBlocks } from "./utils/blocks";
 
 const emptyData: AppData = {
   entries: [],
   bookPages: [],
+  contentBlocks: [],
   relations: [],
   knowledgeGaps: [],
+  trails: [],
+  trailItems: [],
 };
 
 export default function App() {
   const [data, setData] = useState<AppData>(emptyData);
   const [activeView, setActiveView] = useState<AppView>("atlas");
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [selectedTrailId, setSelectedTrailId] = useState<string | null>(null);
   const [openBookId, setOpenBookId] = useState<string | null>(null);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [activeLetter, setActiveLetter] = useState("All");
@@ -56,6 +66,11 @@ export default function App() {
     [data.bookPages, openBookId],
   );
 
+  const selectedEntryBlocks = useMemo(
+    () => selectedEntry ? ownerBlocks(data.contentBlocks, "entry", selectedEntry.id) : [],
+    [data.contentBlocks, selectedEntry],
+  );
+
   const atlasEntries = useMemo(
     () =>
       data.entries.filter((entry) => matchesQuery(entry, query) && matchesLetter(entry, activeLetter)),
@@ -65,6 +80,12 @@ export default function App() {
   const loadData = useCallback(async (nextSelectedId?: string | null) => {
     const loaded = await lexiconRepository.loadAppData();
     setData(loaded);
+    setSelectedTrailId((current) => {
+      if (current && loaded.trails.some((trail) => trail.id === current)) {
+        return current;
+      }
+      return loaded.trails[0]?.id ?? null;
+    });
     setSelectedEntryId((current) => {
       if (nextSelectedId !== undefined) {
         return nextSelectedId;
@@ -115,6 +136,8 @@ export default function App() {
         content: "",
         category: "",
         tags: [],
+        timelineDate: "",
+        timelineNote: "",
       });
       createdId = created.id;
       if (entryType === "book") {
@@ -135,9 +158,10 @@ export default function App() {
     }
   };
 
-  const handleSaveEntry = async (entryId: string, input: EntryInput) => {
+  const handleSaveEntry = async (entryId: string, input: EntryInput, blocks: ContentBlockInput[]) => {
     await runMutation(async () => {
       await lexiconRepository.updateEntry(entryId, input);
+      await lexiconRepository.replaceContentBlocks("entry", entryId, blocks);
     }, entryId);
     setEditingEntryId(null);
     setOpenBookId((current) => (input.entryType === "book" ? current : null));
@@ -158,9 +182,10 @@ export default function App() {
     }, input.entryId);
   };
 
-  const handleUpdatePage = async (pageId: string, input: BookPageInput) => {
+  const handleUpdatePage = async (pageId: string, input: BookPageInput, blocks: ContentBlockInput[]) => {
     await runMutation(async () => {
       await lexiconRepository.updateBookPage(pageId, input);
+      await lexiconRepository.replaceContentBlocks("book_page", pageId, blocks);
     }, input.entryId);
   };
 
@@ -175,6 +200,12 @@ export default function App() {
     await runMutation(async () => {
       await lexiconRepository.createRelation(input);
     }, input.fromEntryId);
+  };
+
+  const handleUpdateRelation = async (relationId: string, input: RelationInput) => {
+    await runMutation(async () => {
+      await lexiconRepository.updateRelation(relationId, input);
+    }, selectedEntryId);
   };
 
   const handleDeleteRelation = async (relationId: string) => {
@@ -198,6 +229,49 @@ export default function App() {
   const handleDeleteKnowledgeGap = async (gapId: string) => {
     await runMutation(async () => {
       await lexiconRepository.deleteKnowledgeGap(gapId);
+    }, selectedEntryId);
+  };
+
+  const handleCreateTrail = async (input: TrailInput) => {
+    let createdTrailId: string | null = null;
+    await runMutation(async () => {
+      const trail = await lexiconRepository.createTrail(input);
+      createdTrailId = trail.id;
+    }, selectedEntryId);
+    if (createdTrailId) {
+      setSelectedTrailId(createdTrailId);
+    }
+  };
+
+  const handleUpdateTrail = async (trailId: string, input: TrailInput) => {
+    await runMutation(async () => {
+      await lexiconRepository.updateTrail(trailId, input);
+    }, selectedEntryId);
+  };
+
+  const handleDeleteTrail = async (trailId: string) => {
+    const remainingTrailId = data.trails.find((trail) => trail.id !== trailId)?.id ?? null;
+    await runMutation(async () => {
+      await lexiconRepository.deleteTrail(trailId);
+    }, selectedEntryId);
+    setSelectedTrailId(remainingTrailId);
+  };
+
+  const handleCreateTrailItem = async (input: TrailItemInput) => {
+    await runMutation(async () => {
+      await lexiconRepository.createTrailItem(input);
+    }, selectedEntryId);
+  };
+
+  const handleUpdateTrailItem = async (trailItemId: string, input: TrailItemInput) => {
+    await runMutation(async () => {
+      await lexiconRepository.updateTrailItem(trailItemId, input);
+    }, selectedEntryId);
+  };
+
+  const handleDeleteTrailItem = async (trailItemId: string) => {
+    await runMutation(async () => {
+      await lexiconRepository.deleteTrailItem(trailItemId);
     }, selectedEntryId);
   };
 
@@ -242,6 +316,35 @@ export default function App() {
       );
     }
 
+    if (activeView === "timeline") {
+      return (
+        <TimelineView
+          entries={data.entries}
+          query={query}
+          onSelectEntry={handleSelectEntry}
+        />
+      );
+    }
+
+    if (activeView === "trails") {
+      return (
+        <TrailsView
+          entries={data.entries}
+          trails={data.trails}
+          trailItems={data.trailItems}
+          selectedTrailId={selectedTrailId}
+          onSelectTrail={setSelectedTrailId}
+          onCreateTrail={handleCreateTrail}
+          onUpdateTrail={handleUpdateTrail}
+          onDeleteTrail={handleDeleteTrail}
+          onCreateTrailItem={handleCreateTrailItem}
+          onUpdateTrailItem={handleUpdateTrailItem}
+          onDeleteTrailItem={handleDeleteTrailItem}
+          onSelectEntry={handleSelectEntry}
+        />
+      );
+    }
+
     if (activeView === "settings") {
       return <SettingsView />;
     }
@@ -251,6 +354,7 @@ export default function App() {
         <MiniBook
           entry={openBook}
           pages={openBookPages}
+          contentBlocks={data.contentBlocks}
           onBack={() => setOpenBookId(null)}
           onCreatePage={handleCreatePage}
           onUpdatePage={handleUpdatePage}
@@ -263,6 +367,7 @@ export default function App() {
       <AtlasBook
         entries={atlasEntries}
         selectedEntry={selectedEntry}
+        selectedEntryBlocks={selectedEntryBlocks}
         activeLetter={activeLetter}
         isEditing={selectedEntry?.id === editingEntryId}
         onLetterChange={setActiveLetter}
@@ -313,6 +418,7 @@ export default function App() {
               relations={data.relations}
               knowledgeGaps={data.knowledgeGaps}
               onAddRelation={handleAddRelation}
+              onUpdateRelation={handleUpdateRelation}
               onDeleteRelation={handleDeleteRelation}
               onAddKnowledgeGap={handleAddKnowledgeGap}
               onUpdateKnowledgeGap={handleUpdateKnowledgeGap}

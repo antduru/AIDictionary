@@ -1,6 +1,37 @@
 export type EntryType = "entry" | "book";
 export type GapStatus = "open" | "resolved";
-export type AppView = "atlas" | "library" | "map" | "settings";
+export type AppView = "atlas" | "library" | "map" | "timeline" | "trails" | "settings";
+export type OwnerType = "entry" | "book_page";
+export type BlockType =
+  | "heading"
+  | "text"
+  | "markdown"
+  | "callout"
+  | "link"
+  | "image"
+  | "table"
+  | "code"
+  | "divider"
+  | "checklist";
+
+export interface ContentBlock {
+  id: string;
+  ownerType: OwnerType;
+  ownerId: string;
+  blockType: BlockType;
+  content: string;
+  metadata: string;
+  blockOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContentBlockInput {
+  blockType: BlockType;
+  content: string;
+  metadata: string;
+  blockOrder: number;
+}
 
 export interface Entry {
   id: string;
@@ -9,6 +40,8 @@ export interface Entry {
   content: string;
   category: string;
   tags: string[];
+  timelineDate: string;
+  timelineNote: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -19,6 +52,8 @@ export interface EntryInput {
   content: string;
   category: string;
   tags: string[];
+  timelineDate: string;
+  timelineNote: string;
 }
 
 export interface BookPage {
@@ -44,6 +79,8 @@ export interface Relation {
   toEntryId: string;
   relationType: string;
   note: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RelationInput {
@@ -59,6 +96,9 @@ export interface KnowledgeGap {
   title: string;
   note: string;
   status: GapStatus;
+  resolvedEntryId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface KnowledgeGapInput {
@@ -66,11 +106,45 @@ export interface KnowledgeGapInput {
   title: string;
   note: string;
   status: GapStatus;
+  resolvedEntryId: string;
+}
+
+export interface Trail {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrailInput {
+  title: string;
+  description: string;
+}
+
+export interface TrailItem {
+  id: string;
+  trailId: string;
+  entryId: string;
+  itemOrder: number;
+  note: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrailItemInput {
+  trailId: string;
+  entryId: string;
+  itemOrder: number;
+  note: string;
 }
 
 export interface AppData {
   entries: Entry[];
   bookPages: BookPage[];
+  contentBlocks: ContentBlock[];
   relations: Relation[];
   knowledgeGaps: KnowledgeGap[];
+  trails: Trail[];
+  trailItems: TrailItem[];
 }

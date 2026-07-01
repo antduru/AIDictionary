@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, Link2, Plus, Trash2, XCircle } from "lucide-react";
+import { CheckCircle2, Link2, Plus, RotateCcw, Trash2, XCircle } from "lucide-react";
 import type {
   Entry,
   KnowledgeGap,
@@ -7,6 +7,7 @@ import type {
   Relation,
   RelationInput,
 } from "../types";
+import { relationTypeSuggestions } from "../utils/blocks";
 
 interface RightContextPanelProps {
   selectedEntry: Entry | null;
@@ -14,6 +15,7 @@ interface RightContextPanelProps {
   relations: Relation[];
   knowledgeGaps: KnowledgeGap[];
   onAddRelation: (input: RelationInput) => Promise<void>;
+  onUpdateRelation: (relationId: string, input: RelationInput) => Promise<void>;
   onDeleteRelation: (relationId: string) => Promise<void>;
   onAddKnowledgeGap: (input: KnowledgeGapInput) => Promise<void>;
   onUpdateKnowledgeGap: (gapId: string, input: KnowledgeGapInput) => Promise<void>;
@@ -27,6 +29,7 @@ export function RightContextPanel({
   relations,
   knowledgeGaps,
   onAddRelation,
+  onUpdateRelation,
   onDeleteRelation,
   onAddKnowledgeGap,
   onUpdateKnowledgeGap,
@@ -34,30 +37,29 @@ export function RightContextPanel({
   onSelectEntry,
 }: RightContextPanelProps) {
   const [targetEntryId, setTargetEntryId] = useState("");
+  const [relationType, setRelationType] = useState("related to");
+  const [relationNote, setRelationNote] = useState("");
   const [newGapTitle, setNewGapTitle] = useState("");
   const [newGapNote, setNewGapNote] = useState("");
 
   const entryById = useMemo(() => new Map(entries.map((entry) => [entry.id, entry])), [entries]);
-  const contextualRelations = selectedEntry
-    ? relations.filter(
-        (relation) =>
-          relation.fromEntryId === selectedEntry.id || relation.toEntryId === selectedEntry.id,
-      )
+  const outgoingRelations = selectedEntry
+    ? relations.filter((relation) => relation.fromEntryId === selectedEntry.id)
+    : [];
+  const backlinks = selectedEntry
+    ? relations.filter((relation) => relation.toEntryId === selectedEntry.id)
     : [];
 
-  const relatedEntryIds = new Set(
-    contextualRelations.map((relation) =>
-      relation.fromEntryId === selectedEntry?.id ? relation.toEntryId : relation.fromEntryId,
-    ),
-  );
-
+  const outgoingTargetIds = new Set(outgoingRelations.map((relation) => relation.toEntryId));
   const relationOptions = selectedEntry
-    ? entries.filter((entry) => entry.id !== selectedEntry.id && !relatedEntryIds.has(entry.id))
+    ? entries.filter((entry) => entry.id !== selectedEntry.id && !outgoingTargetIds.has(entry.id))
     : [];
 
   const contextualGaps = selectedEntry
     ? knowledgeGaps.filter((gap) => gap.entryId === selectedEntry.id)
     : [];
+  const openGaps = contextualGaps.filter((gap) => gap.status === "open");
+  const resolvedGaps = contextualGaps.filter((gap) => gap.status === "resolved");
 
   const handleAddRelation = async () => {
     if (!selectedEntry || !targetEntryId) {
@@ -66,10 +68,12 @@ export function RightContextPanel({
     await onAddRelation({
       fromEntryId: selectedEntry.id,
       toEntryId: targetEntryId,
-      relationType: "related",
-      note: "",
+      relationType: relationType.trim() || "related to",
+      note: relationNote.trim(),
     });
     setTargetEntryId("");
+    setRelationType("related to");
+    setRelationNote("");
   };
 
   const handleAddGap = async () => {
@@ -81,6 +85,7 @@ export function RightContextPanel({
       title: newGapTitle.trim(),
       note: newGapNote.trim(),
       status: "open",
+      resolvedEntryId: "",
     });
     setNewGapTitle("");
     setNewGapNote("");
@@ -101,45 +106,79 @@ export function RightContextPanel({
               <h3>Related Entries</h3>
             </div>
 
-            <div className="inline-control">
+            <div className="relation-form">
               <select value={targetEntryId} onChange={(event) => setTargetEntryId(event.target.value)}>
-                <option value="">Add relation...</option>
+                <option value="">Target entry...</option>
                 {relationOptions.map((entry) => (
                   <option value={entry.id} key={entry.id}>
                     {entry.title}
                   </option>
                 ))}
               </select>
-              <button className="icon-button" type="button" onClick={handleAddRelation} title="Add relation">
+              <input
+                list="relation-type-suggestions"
+                value={relationType}
+                onChange={(event) => setRelationType(event.target.value)}
+                placeholder="relation type"
+              />
+              <datalist id="relation-type-suggestions">
+                {relationTypeSuggestions.map((suggestion) => (
+                  <option value={suggestion} key={suggestion} />
+                ))}
+              </datalist>
+              <textarea
+                value={relationNote}
+                onChange={(event) => setRelationNote(event.target.value)}
+                placeholder="Optional relation note"
+              />
+              <button className="button button--subtle button--full" type="button" onClick={handleAddRelation}>
                 <Plus size={16} />
+                Add Relation
               </button>
             </div>
 
             <div className="context-list">
-              {contextualRelations.length === 0 ? (
-                <p className="muted">No related entries yet.</p>
+              {outgoingRelations.length === 0 ? (
+                <p className="muted">No outgoing relations yet.</p>
               ) : (
-                contextualRelations.map((relation) => {
-                  const relatedId =
-                    relation.fromEntryId === selectedEntry.id
-                      ? relation.toEntryId
-                      : relation.fromEntryId;
-                  const relatedEntry = entryById.get(relatedId);
+                outgoingRelations.map((relation) => (
+                  <RelationItem
+                    key={relation.id}
+                    relation={relation}
+                    selectedEntry={selectedEntry}
+                    targetEntry={entryById.get(relation.toEntryId) ?? null}
+                    onSelectEntry={onSelectEntry}
+                    onUpdate={(input) => onUpdateRelation(relation.id, input)}
+                    onDelete={() => onDeleteRelation(relation.id)}
+                  />
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="context-section">
+            <div className="context-section-title">
+              <RotateCcw size={16} />
+              <h3>Referenced By</h3>
+            </div>
+
+            <div className="context-list">
+              {backlinks.length === 0 ? (
+                <p className="muted">No backlinks yet.</p>
+              ) : (
+                backlinks.map((relation) => {
+                  const source = entryById.get(relation.fromEntryId);
                   return (
-                    <div className="context-item" key={relation.id}>
-                      <button type="button" onClick={() => relatedEntry && onSelectEntry(relatedEntry.id)}>
-                        {relatedEntry?.title ?? "Missing entry"}
-                        <small>{relation.relationType}</small>
-                      </button>
-                      <button
-                        className="mini-icon-button"
-                        type="button"
-                        onClick={() => onDeleteRelation(relation.id)}
-                        title="Remove relation"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <button
+                      className="backlink-item"
+                      type="button"
+                      key={relation.id}
+                      onClick={() => source && onSelectEntry(source.id)}
+                    >
+                      <strong>{source?.title ?? "Missing entry"}</strong>
+                      <span>{relation.relationType} this</span>
+                      {relation.note ? <small>{relation.note}</small> : null}
+                    </button>
                   );
                 })
               )}
@@ -169,48 +208,171 @@ export function RightContextPanel({
               </button>
             </div>
 
-            <div className="context-list">
-              {contextualGaps.length === 0 ? (
-                <p className="muted">No knowledge gaps recorded.</p>
-              ) : (
-                contextualGaps.map((gap) => (
-                  <KnowledgeGapItem
-                    key={gap.id}
-                    gap={gap}
-                    onUpdate={(input) => onUpdateKnowledgeGap(gap.id, input)}
-                    onDelete={() => onDeleteKnowledgeGap(gap.id)}
-                  />
-                ))
-              )}
-            </div>
+            <GapList
+              title="Open"
+              gaps={openGaps}
+              entries={entries}
+              onUpdate={(gap, input) => onUpdateKnowledgeGap(gap.id, input)}
+              onDelete={(gap) => onDeleteKnowledgeGap(gap.id)}
+              onSelectEntry={onSelectEntry}
+            />
+            <GapList
+              title="Resolved"
+              gaps={resolvedGaps}
+              entries={entries}
+              onUpdate={(gap, input) => onUpdateKnowledgeGap(gap.id, input)}
+              onDelete={(gap) => onDeleteKnowledgeGap(gap.id)}
+              onSelectEntry={onSelectEntry}
+              compact
+            />
           </section>
         </>
       ) : (
         <div className="context-empty">
           <strong>No entry selected</strong>
-          <p>Open an atlas page to manage manual relations and knowledge gaps.</p>
+          <p>Open an atlas page to manage manual relations, backlinks, and knowledge gaps.</p>
         </div>
       )}
     </aside>
   );
 }
 
-interface KnowledgeGapItemProps {
-  gap: KnowledgeGap;
-  onUpdate: (input: KnowledgeGapInput) => Promise<void>;
+interface RelationItemProps {
+  relation: Relation;
+  selectedEntry: Entry;
+  targetEntry: Entry | null;
+  onSelectEntry: (entryId: string) => void;
+  onUpdate: (input: RelationInput) => Promise<void>;
   onDelete: () => Promise<void>;
 }
 
-function KnowledgeGapItem({ gap, onUpdate, onDelete }: KnowledgeGapItemProps) {
+function RelationItem({
+  relation,
+  selectedEntry,
+  targetEntry,
+  onSelectEntry,
+  onUpdate,
+  onDelete,
+}: RelationItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [relationType, setRelationType] = useState(relation.relationType);
+  const [note, setNote] = useState(relation.note);
+
+  if (isEditing) {
+    return (
+      <div className="relation-edit-card">
+        <input
+          list="relation-type-suggestions"
+          value={relationType}
+          onChange={(event) => setRelationType(event.target.value)}
+        />
+        <textarea value={note} onChange={(event) => setNote(event.target.value)} />
+        <div className="editor-actions">
+          <button
+            className="button button--primary"
+            type="button"
+            onClick={async () => {
+              await onUpdate({
+                fromEntryId: relation.fromEntryId,
+                toEntryId: relation.toEntryId,
+                relationType,
+                note,
+              });
+              setIsEditing(false);
+            }}
+          >
+            Save
+          </button>
+          <button className="button button--subtle" type="button" onClick={() => setIsEditing(false)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relation-card">
+      <button type="button" onClick={() => targetEntry && onSelectEntry(targetEntry.id)}>
+        <span>{selectedEntry.title}</span>
+        <strong>{relation.relationType}</strong>
+        <span>{targetEntry?.title ?? "Missing entry"}</span>
+        {relation.note ? <small>{relation.note}</small> : null}
+      </button>
+      <div className="gap-actions">
+        <button className="mini-icon-button" type="button" onClick={() => setIsEditing(true)} title="Edit relation">
+          Edit
+        </button>
+        <button className="mini-icon-button" type="button" onClick={onDelete} title="Remove relation">
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface GapListProps {
+  title: string;
+  gaps: KnowledgeGap[];
+  entries: Entry[];
+  onUpdate: (gap: KnowledgeGap, input: KnowledgeGapInput) => Promise<void>;
+  onDelete: (gap: KnowledgeGap) => Promise<void>;
+  onSelectEntry: (entryId: string) => void;
+  compact?: boolean;
+}
+
+function GapList({ title, gaps, entries, onUpdate, onDelete, onSelectEntry, compact = false }: GapListProps) {
+  return (
+    <div className={compact ? "gap-group gap-group--resolved" : "gap-group"}>
+      <span className="gap-group-title">{title}</span>
+      <div className="context-list">
+        {gaps.length === 0 ? (
+          <p className="muted">{compact ? "No resolved gaps." : "No open gaps."}</p>
+        ) : (
+          gaps.map((gap) => (
+            <KnowledgeGapItem
+              key={gap.id}
+              gap={gap}
+              entries={entries}
+              onUpdate={(input) => onUpdate(gap, input)}
+              onDelete={() => onDelete(gap)}
+              onSelectEntry={onSelectEntry}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface KnowledgeGapItemProps {
+  gap: KnowledgeGap;
+  entries: Entry[];
+  onUpdate: (input: KnowledgeGapInput) => Promise<void>;
+  onDelete: () => Promise<void>;
+  onSelectEntry: (entryId: string) => void;
+}
+
+function KnowledgeGapItem({ gap, entries, onUpdate, onDelete, onSelectEntry }: KnowledgeGapItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(gap.title);
   const [note, setNote] = useState(gap.note);
+  const [resolvedEntryId, setResolvedEntryId] = useState(gap.resolvedEntryId);
+  const resolvedEntry = entries.find((entry) => entry.id === gap.resolvedEntryId);
 
   if (isEditing) {
     return (
       <div className="gap-edit-card">
         <input value={title} onChange={(event) => setTitle(event.target.value)} />
         <textarea value={note} onChange={(event) => setNote(event.target.value)} />
+        <select value={resolvedEntryId} onChange={(event) => setResolvedEntryId(event.target.value)}>
+          <option value="">Resolved entry...</option>
+          {entries.map((entry) => (
+            <option value={entry.id} key={entry.id}>
+              {entry.title}
+            </option>
+          ))}
+        </select>
         <div className="editor-actions">
           <button
             className="button button--primary"
@@ -221,6 +383,7 @@ function KnowledgeGapItem({ gap, onUpdate, onDelete }: KnowledgeGapItemProps) {
                 title,
                 note,
                 status: gap.status,
+                resolvedEntryId,
               });
               setIsEditing(false);
             }}
@@ -243,6 +406,11 @@ function KnowledgeGapItem({ gap, onUpdate, onDelete }: KnowledgeGapItemProps) {
         <span className={gap.status === "resolved" ? "status-pill status-pill--resolved" : "status-pill"}>
           {gap.status}
         </span>
+        {resolvedEntry ? (
+          <button className="resolved-link" type="button" onClick={() => onSelectEntry(resolvedEntry.id)}>
+            resolved by {resolvedEntry.title}
+          </button>
+        ) : null}
       </div>
       <div className="gap-actions">
         <button
@@ -254,6 +422,7 @@ function KnowledgeGapItem({ gap, onUpdate, onDelete }: KnowledgeGapItemProps) {
               title: gap.title,
               note: gap.note,
               status: gap.status === "resolved" ? "open" : "resolved",
+              resolvedEntryId: gap.resolvedEntryId,
             })
           }
           title={gap.status === "resolved" ? "Reopen" : "Resolve"}
@@ -261,7 +430,7 @@ function KnowledgeGapItem({ gap, onUpdate, onDelete }: KnowledgeGapItemProps) {
           <CheckCircle2 size={14} />
         </button>
         <button className="mini-icon-button" type="button" onClick={() => setIsEditing(true)} title="Edit gap">
-          <span aria-hidden="true">Edit</span>
+          Edit
         </button>
         <button className="mini-icon-button" type="button" onClick={onDelete} title="Delete gap">
           <Trash2 size={14} />

@@ -1,18 +1,25 @@
 import { useMemo, useState } from "react";
-import type { Entry, EntryInput, EntryType } from "../types";
+import type { ContentBlock, ContentBlockInput, Entry, EntryInput, EntryType } from "../types";
+import { BlockEditor } from "./BlockEditor";
+import { blocksToInputs, projectBlocksToContent } from "../utils/blocks";
 
 interface EntryEditorProps {
   entry: Entry;
-  onSave: (input: EntryInput) => Promise<void>;
+  blocks: ContentBlock[];
+  onSave: (input: EntryInput, blocks: ContentBlockInput[]) => Promise<void>;
   onCancel: () => void;
 }
 
-export function EntryEditor({ entry, onSave, onCancel }: EntryEditorProps) {
+export function EntryEditor({ entry, blocks, onSave, onCancel }: EntryEditorProps) {
   const [title, setTitle] = useState(entry.title);
   const [entryType, setEntryType] = useState<EntryType>(entry.entryType);
   const [category, setCategory] = useState(entry.category);
   const [tags, setTags] = useState(entry.tags.join(", "));
-  const [content, setContent] = useState(entry.content);
+  const [timelineDate, setTimelineDate] = useState(entry.timelineDate);
+  const [timelineNote, setTimelineNote] = useState(entry.timelineNote);
+  const [draftBlocks, setDraftBlocks] = useState<ContentBlockInput[]>(() =>
+    blocksToInputs(blocks, entry.content),
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const normalizedTags = useMemo(
@@ -28,13 +35,16 @@ export function EntryEditor({ entry, onSave, onCancel }: EntryEditorProps) {
     event.preventDefault();
     setIsSaving(true);
     try {
+      const projectedContent = projectBlocksToContent(draftBlocks);
       await onSave({
         title: title.trim() || "Untitled",
         entryType,
-        content,
+        content: projectedContent,
         category: category.trim(),
         tags: normalizedTags,
-      });
+        timelineDate: timelineDate.trim(),
+        timelineNote: timelineNote.trim(),
+      }, draftBlocks);
     } finally {
       setIsSaving(false);
     }
@@ -72,16 +82,27 @@ export function EntryEditor({ entry, onSave, onCancel }: EntryEditorProps) {
             placeholder="comma, separated, tags"
           />
         </label>
+
+        <label className="field">
+          <span>Timeline Date</span>
+          <input
+            value={timelineDate}
+            onChange={(event) => setTimelineDate(event.target.value)}
+            placeholder="2021, 1600, modern ML"
+          />
+        </label>
+
+        <label className="field">
+          <span>Timeline Note</span>
+          <input
+            value={timelineNote}
+            onChange={(event) => setTimelineNote(event.target.value)}
+            placeholder="Optional context"
+          />
+        </label>
       </div>
 
-      <label className="field markdown-field">
-        <span>Markdown</span>
-        <textarea
-          value={content}
-          onChange={(event) => setContent(event.target.value)}
-          placeholder="Write flexible notes, sections, links, questions, and relationships."
-        />
-      </label>
+      <BlockEditor blocks={draftBlocks} onChange={setDraftBlocks} />
 
       <div className="editor-actions">
         <button className="button button--primary" type="submit" disabled={isSaving}>

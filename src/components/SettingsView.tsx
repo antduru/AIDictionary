@@ -13,7 +13,7 @@ export function SettingsView() {
       <div className="settings-panel">
         <div>
           <strong>Version</strong>
-          <p>0.1.0 MVP</p>
+          <p>0.2.0 local-first organization MVP</p>
         </div>
         <div>
           <strong>Storage</strong>

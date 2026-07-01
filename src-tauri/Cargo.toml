@@ -1,6 +1,6 @@
 [package]
 name = "lexicon-os"
-version = "0.1.0"
+version = "0.2.0"
 description = "A local-first personal knowledge atlas."
 authors = ["Lexicon OS"]
 edition = "2021"

@@ -1,4 +1,31 @@
-export type EntryType = "entry" | "book";
+export const entryTypeOptions = [
+  "entry",
+  "book",
+  "model",
+  "paper",
+  "metric",
+  "dataset",
+  "task",
+  "method",
+  "concept",
+  "benchmark",
+] as const;
+
+export type EntryType = (typeof entryTypeOptions)[number];
+
+export const entryTypeLabels: Record<EntryType, string> = {
+  entry: "Entry",
+  book: "Book",
+  model: "Model",
+  paper: "Paper",
+  metric: "Metric",
+  dataset: "Dataset",
+  task: "Task",
+  method: "Method",
+  concept: "Concept",
+  benchmark: "Benchmark",
+};
+
 export type GapStatus = "open" | "resolved";
 export type AppView = "atlas" | "library" | "map" | "timeline" | "trails" | "settings";
 export type OwnerType = "entry" | "book_page";

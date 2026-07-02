@@ -7,6 +7,7 @@ import type {
   ContentBlockInput,
   Entry,
   EntryInput,
+  EntryType,
   KnowledgeGap,
   KnowledgeGapInput,
   Relation,
@@ -57,351 +58,218 @@ const createId = (prefix: string) => {
 
 const seedData = (): AppData => {
   const timestamp = now();
+  const entry = (
+    id: string,
+    title: string,
+    entryType: EntryType,
+    category: string,
+    tags: string[],
+    timelineDate: string,
+    timelineNote: string,
+    content: string,
+  ): Entry => ({
+    id,
+    title,
+    entryType,
+    content,
+    category,
+    tags,
+    timelineDate,
+    timelineNote,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+  const page = (
+    id: string,
+    entryId: string,
+    title: string,
+    content: string,
+    pageOrder: number,
+  ): BookPage => ({
+    id,
+    entryId,
+    title,
+    content,
+    pageOrder,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+
   const data: AppData = {
     entries: [
-      {
-        id: "seed_hamlet",
-        title: "Hamlet",
-        entryType: "book",
-        content:
-          "A nested atlas for reading Hamlet through sovereignty, theatrical knowledge, mourning, succession, and forms of delay.",
-        category: "Early Modern Drama",
-        tags: ["Shakespeare", "tragedy", "revenge tragedy", "epistemology"],
-        timelineDate: "1600",
-        timelineNote: "Approximate composition period; useful for locating the play near succession anxiety and late Elizabethan theatrical culture.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_paradise_lost",
-        title: "Paradise Lost",
-        entryType: "book",
-        content:
-          "A Miltonic mini-book for epic form, obedience, liberty, fallenness, republican memory, and the pressure of theology on poetic syntax.",
-        category: "Restoration Epic",
-        tags: ["Milton", "epic", "blank verse", "theology", "republicanism"],
-        timelineDate: "1667",
-        timelineNote: "First published in ten books in 1667; revised into twelve books in 1674.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_waste_land",
-        title: "The Waste Land",
-        entryType: "book",
-        content:
-          "A modernist mini-book for allusion, fragmentation, ritual method, urban voices, and the problem of cultural inheritance after catastrophe.",
-        category: "Modernist Poetry",
-        tags: ["Eliot", "modernism", "allusion", "fragment", "ritual"],
-        timelineDate: "1922",
-        timelineNote: "Published in the high modernist annus mirabilis alongside Ulysses and Jacob's Room.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_negative_capability",
-        title: "Negative Capability",
-        entryType: "entry",
-        content:
-          "Keats's name for the poet's capacity to remain with uncertainty, mystery, and unresolved contradiction without converting them too quickly into doctrine.\n\nIn PhD-level use, treat it less as a slogan for vagueness and more as a theory of suspended epistemic mastery.",
-        category: "Romantic Poetics",
-        tags: ["Keats", "Romanticism", "poetics", "uncertainty"],
-        timelineDate: "1817",
-        timelineNote: "Formulated in Keats's December 1817 letter to George and Thomas Keats.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_elegy",
-        title: "Elegy",
-        entryType: "entry",
-        content:
-          "A mode of writing organized by loss, consolation, memorial address, and the instability of surviving speech.\n\nUseful axis: public commemoration versus private grief; ritual closure versus melancholic repetition.",
-        category: "Genre and Form",
-        tags: ["genre", "mourning", "lyric", "death"],
-        timelineDate: "classical to modern",
-        timelineNote: "A durable form that shifts from classical lament to modern meditations on historical rupture.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_ekphrasis",
-        title: "Ekphrasis",
-        entryType: "entry",
-        content:
-          "The verbal representation of visual art or visual experience, often staging rivalry between media, spectatorship, and interpretation.\n\nTrack who controls the gaze, what the described object withholds, and whether description becomes possession.",
-        category: "Rhetoric and Media",
-        tags: ["rhetoric", "visuality", "aesthetics", "media"],
-        timelineDate: "ancient rhetoric",
-        timelineNote: "A classical rhetorical term that becomes central to modern theories of word-image relations.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_pastoral",
-        title: "Pastoral",
-        entryType: "entry",
-        content:
-          "A mode that imagines rural retreat in order to think about labor, artifice, class, enclosure, ecology, and political disappointment.\n\nDo not reduce pastoral to scenery; its force often lies in the friction between idealized withdrawal and material history.",
-        category: "Genre and Mode",
-        tags: ["genre", "ecology", "class", "landscape"],
-        timelineDate: "classical to modern",
-        timelineNote: "From Theocritus and Virgil through Renaissance eclogue, Romantic retreat, and modern anti-pastoral.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_free_indirect_discourse",
-        title: "Free Indirect Discourse",
-        entryType: "entry",
-        content:
-          "A narrative technique in which third-person narration absorbs a character's idiom, judgments, or perceptual field without direct quotation.\n\nIt is especially useful for tracking irony, social cognition, and the unstable boundary between narrator and character.",
-        category: "Narratology",
-        tags: ["novel", "narration", "Austen", "irony"],
-        timelineDate: "19th century",
-        timelineNote: "Frequently associated with Austen and later realist or modernist fiction.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_metaphysical_conceit",
-        title: "Metaphysical Conceit",
-        entryType: "entry",
-        content:
-          "An intellectually strenuous figure that joins remote fields of experience into a single argumentative image.\n\nIn Donne and later criticism, the conceit is not ornamental excess but a pressure point where theology, erotic address, and logical wit meet.",
-        category: "Early Modern Poetry",
-        tags: ["Donne", "metaphysical poetry", "rhetoric", "wit"],
-        timelineDate: "17th century",
-        timelineNote: "A retrospective critical category shaped by eighteenth-century and modern accounts of metaphysical poetry.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_allusion",
-        title: "Allusion",
-        entryType: "entry",
-        content:
-          "A compressed reference that activates another text, tradition, myth, event, or interpretive frame without fully absorbing it.\n\nAt doctoral level, ask what allusion authorizes, excludes, misremembers, or makes newly available under historical pressure.",
-        category: "Intertextuality",
-        tags: ["method", "intertextuality", "modernism", "classics"],
-        timelineDate: "",
-        timelineNote: "",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
+      entry("seed_cv_foundations", "Computer Vision Foundations", "book", "Computer Vision", ["overview", "geometry", "learning"], "1960s-present", "From early image understanding and projective geometry to deep visual representation learning.", "A broad atlas hub for the field: image formation, features, recognition, detection, segmentation, tracking, 3D perception, and multimodal vision."),
+      entry("seed_object_detection", "Object Detection", "book", "Detection", ["task", "localization", "recognition"], "2001-present", "Modern detection moves from sliding windows and hand-built features to proposal networks, one-stage detectors, transformers, and open-vocabulary detection.", "A mini-book for locating and classifying objects in images, including proposal-based, one-stage, anchor-free, and transformer-based detectors."),
+      entry("seed_segmentation", "Image Segmentation", "book", "Segmentation", ["semantic segmentation", "instance segmentation", "masks"], "1980s-present", "Segmentation connects classical grouping, dense prediction, medical imaging, and promptable foundation models.", "A mini-book for semantic, instance, panoptic, and promptable segmentation."),
+      entry("seed_vision_transformers", "Vision Transformers", "book", "Architectures", ["transformer", "attention", "backbone"], "2020-present", "The ViT line reframed image recognition around patch tokens and scalable attention-based backbones.", "A mini-book for ViT, Swin, DeiT, MAE, and transformer-based perception architectures."),
+      entry("seed_generative_vision", "Generative Vision", "book", "Generative Models", ["diffusion", "GAN", "image synthesis"], "2014-present", "From GANs to diffusion models, generative vision became a core way to model image distributions and controllable synthesis.", "A mini-book for image generation, restoration, editing, and representation learning through generative objectives."),
+      entry("seed_image_classification", "Image Classification", "task", "Recognition", ["classification", "supervised learning"], "2012", "Deep CNNs became dominant after AlexNet on ImageNet.", "Assigns one or more labels to an image. It is often the simplest benchmark for representation quality, but it hides localization, robustness, and context failures."),
+      entry("seed_object_localization", "Object Localization", "task", "Detection", ["bounding boxes", "localization"], "2000s", "Localization bridges classification and detection by requiring spatial evidence.", "Predicts where an object appears, usually with a bounding box or region, without necessarily handling multiple instances well."),
+      entry("seed_semantic_segmentation", "Semantic Segmentation", "task", "Segmentation", ["dense prediction", "pixel labels"], "2015", "Fully convolutional networks made end-to-end dense prediction a standard deep learning task.", "Assigns a class label to every pixel, merging all instances of the same class into one semantic field."),
+      entry("seed_instance_segmentation", "Instance Segmentation", "task", "Segmentation", ["masks", "instances"], "2017", "Mask R-CNN made instance masks a mainstream detection extension.", "Separates individual object instances and predicts a mask for each one."),
+      entry("seed_panoptic_segmentation", "Panoptic Segmentation", "task", "Segmentation", ["stuff", "things", "panoptic"], "2018", "Panoptic segmentation unified semantic stuff regions and countable thing instances.", "Combines semantic segmentation for amorphous regions with instance segmentation for countable objects."),
+      entry("seed_depth_estimation", "Monocular Depth Estimation", "task", "3D Vision", ["depth", "geometry"], "2014-present", "Deep monocular depth moved from supervised NYU/KITTI training to scale-ambiguous and foundation-model approaches.", "Predicts scene depth from one image, requiring learned priors because absolute scale is under-constrained."),
+      entry("seed_optical_flow", "Optical Flow", "task", "Motion", ["motion", "correspondence"], "1981-present", "A classical variational problem that later became a deep correspondence benchmark.", "Estimates per-pixel motion between frames. Failure modes include occlusion, textureless surfaces, reflective regions, and large displacement."),
+      entry("seed_pose_estimation", "Human Pose Estimation", "task", "Human-Centric Vision", ["keypoints", "skeletons"], "2016-present", "Deep keypoint detection is central to human activity analysis, sports analytics, and embodied interfaces.", "Detects body joints or keypoints, often with top-down person crops or bottom-up grouping."),
+      entry("seed_visual_question_answering", "Visual Question Answering", "task", "Vision-Language", ["VQA", "multimodal"], "2015", "VQA exposed the need for joint visual grounding and language reasoning.", "Answers natural-language questions about images, mixing perception, grounding, commonsense, and dataset bias."),
+      entry("seed_image_retrieval", "Image Retrieval", "task", "Retrieval", ["embedding", "search"], "1990s-present", "Retrieval evolved from local descriptors to learned global embeddings and vision-language search.", "Finds visually or semantically similar images from a collection using descriptors or learned embeddings."),
+      entry("seed_imagenet", "ImageNet", "dataset", "Datasets", ["classification", "large-scale"], "2009", "ImageNet catalyzed large-scale supervised visual recognition and the ILSVRC benchmark.", "A large image classification dataset organized around WordNet synsets; historically central to CNN pretraining and model comparison."),
+      entry("seed_coco", "MS COCO", "dataset", "Datasets", ["detection", "segmentation", "captions"], "2014", "COCO became a standard benchmark for detection, segmentation, keypoints, and captions.", "A dataset emphasizing everyday scenes with multiple objects, instance masks, captions, and contextual relationships."),
+      entry("seed_pascal_voc", "PASCAL VOC", "dataset", "Datasets", ["detection", "segmentation"], "2005-2012", "VOC shaped early detection and segmentation evaluation before COCO became dominant.", "A compact benchmark suite for classification, detection, and segmentation with 20 object categories."),
+      entry("seed_cityscapes", "Cityscapes", "dataset", "Datasets", ["driving", "segmentation"], "2016", "Cityscapes is a key urban scene understanding benchmark for autonomous driving.", "High-quality street-scene dataset with fine semantic annotations for road, vehicles, pedestrians, signs, and urban layout."),
+      entry("seed_ade20k", "ADE20K", "dataset", "Datasets", ["scene parsing", "segmentation"], "2017", "ADE20K pushed dense scene parsing beyond object-centric datasets.", "Scene parsing dataset with many object and stuff categories, often used for semantic segmentation and scene understanding."),
+      entry("seed_kitti", "KITTI", "dataset", "Datasets", ["driving", "3D detection", "depth"], "2012", "KITTI became a foundational autonomous driving benchmark.", "Driving dataset with stereo, LiDAR, optical flow, depth, odometry, tracking, and 3D detection tasks."),
+      entry("seed_laion", "LAION-5B", "dataset", "Datasets", ["web-scale", "vision-language"], "2022", "LAION made large-scale image-text pretraining datasets broadly accessible.", "A web-scale image-text dataset used for contrastive and generative vision-language training."),
+      entry("seed_alexnet", "AlexNet", "model", "CNN Models", ["CNN", "ImageNet"], "2012", "AlexNet triggered the modern deep learning shift in computer vision.", "A deep CNN with ReLU activations, dropout, data augmentation, and GPU training that dramatically improved ImageNet classification."),
+      entry("seed_vgg", "VGGNet", "model", "CNN Models", ["CNN", "backbone"], "2014", "VGG showed the value of depth and simple repeated 3x3 convolutions.", "A plain deep CNN family valued for its simplicity and transfer-learning utility, despite high compute cost."),
+      entry("seed_inception", "Inception / GoogLeNet", "model", "CNN Models", ["multi-scale", "CNN"], "2014", "Inception popularized multi-branch modules for efficient multi-scale processing.", "A CNN architecture using parallel filters and dimensionality reduction to balance accuracy and compute."),
+      entry("seed_resnet", "ResNet", "model", "CNN Models", ["residual learning", "backbone"], "2015", "Residual connections made very deep networks trainable.", "A backbone family built around identity skip connections, central to recognition, detection, segmentation, and transfer learning."),
+      entry("seed_densenet", "DenseNet", "model", "CNN Models", ["dense connections", "feature reuse"], "2016", "DenseNet emphasized feature reuse through dense connectivity.", "A CNN architecture where each layer receives outputs from all earlier layers, improving gradient flow and parameter efficiency."),
+      entry("seed_mobilenetv2", "MobileNetV2", "model", "Efficient Models", ["mobile", "depthwise convolution"], "2018", "MobileNetV2 became a common efficient backbone for edge vision.", "Uses inverted residuals and depthwise separable convolutions for mobile-friendly visual recognition."),
+      entry("seed_efficientnet", "EfficientNet", "model", "Efficient Models", ["compound scaling", "backbone"], "2019", "EfficientNet systematized compound scaling of depth, width, and resolution.", "A family of CNNs balancing accuracy and efficiency through neural architecture search and scaling rules."),
+      entry("seed_faster_rcnn", "Faster R-CNN", "model", "Detection Models", ["two-stage detector", "RPN"], "2015", "Faster R-CNN integrated region proposal learning into the detector.", "A two-stage detector using a Region Proposal Network followed by ROI classification and box regression."),
+      entry("seed_yolo", "YOLO", "model", "Detection Models", ["one-stage detector", "real-time"], "2016-present", "YOLO popularized real-time one-stage detection.", "A family of detectors that directly predicts object boxes and classes in one pass, emphasizing deployment speed."),
+      entry("seed_ssd", "SSD", "model", "Detection Models", ["one-stage detector", "anchors"], "2016", "SSD made multi-scale one-stage detection practical.", "Single Shot MultiBox Detector predicts boxes from multiple feature maps at different resolutions."),
+      entry("seed_mask_rcnn", "Mask R-CNN", "model", "Segmentation Models", ["instance segmentation", "ROIAlign"], "2017", "Mask R-CNN extended Faster R-CNN with high-quality instance masks.", "Adds a mask prediction branch and ROIAlign to two-stage detection for instance segmentation."),
+      entry("seed_unet", "U-Net", "model", "Segmentation Models", ["medical imaging", "encoder-decoder"], "2015", "U-Net became a default architecture for biomedical segmentation.", "An encoder-decoder network with skip connections that preserve localization detail for dense masks."),
+      entry("seed_deeplab", "DeepLabv3+", "model", "Segmentation Models", ["atrous convolution", "ASPP"], "2018", "DeepLabv3+ combines atrous spatial pyramid pooling with encoder-decoder refinement.", "A semantic segmentation model designed for multi-scale context and sharper object boundaries."),
+      entry("seed_vit", "Vision Transformer", "model", "Transformer Models", ["ViT", "patch tokens"], "2020", "ViT showed that pure transformers can scale effectively for image recognition.", "Splits an image into patches, embeds them as tokens, and applies transformer encoder layers."),
+      entry("seed_swin", "Swin Transformer", "model", "Transformer Models", ["hierarchical transformer", "window attention"], "2021", "Swin adapted transformers to hierarchical dense vision tasks.", "Uses shifted local windows to control attention cost while producing multi-scale feature maps."),
+      entry("seed_detr", "DETR", "model", "Detection Models", ["transformer", "set prediction"], "2020", "DETR reframed detection as direct set prediction.", "Uses a transformer decoder and bipartite matching to remove anchors and non-maximum suppression from the core detector."),
+      entry("seed_sam", "Segment Anything Model", "model", "Foundation Models", ["promptable segmentation", "foundation model"], "2023", "SAM made promptable segmentation a general-purpose interaction pattern.", "A segmentation foundation model that accepts points, boxes, or masks as prompts and returns object masks."),
+      entry("seed_dinov2", "DINOv2", "model", "Foundation Models", ["self-supervised", "representation"], "2023", "DINOv2 provided strong self-supervised visual features without labels.", "A self-supervised vision model family used as a general-purpose backbone for downstream dense and global tasks."),
+      entry("seed_clip", "CLIP", "model", "Vision-Language Models", ["contrastive learning", "zero-shot"], "2021", "CLIP connected image representations to natural-language supervision at web scale.", "A vision-language model trained to align images and text, enabling zero-shot classification and retrieval."),
+      entry("seed_stable_diffusion", "Stable Diffusion", "model", "Generative Models", ["diffusion", "latent diffusion"], "2022", "Latent diffusion made text-to-image generation practical on commodity GPUs.", "A latent diffusion model for text-conditioned image generation, editing, inpainting, and visual concept exploration."),
+      entry("seed_alexnet_paper", "ImageNet Classification with Deep Convolutional Neural Networks", "paper", "Papers", ["AlexNet", "ImageNet"], "2012", "The canonical AlexNet paper.", "Krizhevsky, Sutskever, and Hinton demonstrated a large CNN trained on GPUs with major ImageNet gains."),
+      entry("seed_resnet_paper", "Deep Residual Learning for Image Recognition", "paper", "Papers", ["ResNet", "residual learning"], "2015", "The ResNet paper introduced residual blocks for very deep networks.", "He et al. showed that skip connections allow networks with over 100 layers to optimize effectively."),
+      entry("seed_vit_paper", "An Image is Worth 16x16 Words", "paper", "Papers", ["ViT", "transformer"], "2020", "The original Vision Transformer paper.", "Dosovitskiy et al. treated image patches as tokens and demonstrated strong scaling with large pretraining."),
+      entry("seed_detr_paper", "End-to-End Object Detection with Transformers", "paper", "Papers", ["DETR", "set prediction"], "2020", "The DETR paper.", "Carion et al. removed many hand-designed detector components by using transformers and Hungarian matching."),
+      entry("seed_mask_rcnn_paper", "Mask R-CNN Paper", "paper", "Papers", ["Mask R-CNN", "instance segmentation"], "2017", "The Mask R-CNN paper.", "He et al. added a parallel mask branch and ROIAlign to Faster R-CNN for instance segmentation."),
+      entry("seed_unet_paper", "U-Net Paper", "paper", "Papers", ["U-Net", "medical imaging"], "2015", "The U-Net paper.", "Ronneberger et al. proposed an encoder-decoder architecture with skip connections for biomedical segmentation."),
+      entry("seed_sam_paper", "Segment Anything Paper", "paper", "Papers", ["SAM", "promptable segmentation"], "2023", "The Segment Anything paper introduced a large-scale promptable segmentation system.", "Kirillov et al. combined a promptable model, a data engine, and the SA-1B mask dataset."),
+      entry("seed_clip_paper", "Learning Transferable Visual Models From Natural Language Supervision", "paper", "Papers", ["CLIP", "vision-language"], "2021", "The CLIP paper.", "Radford et al. trained image-text contrastive models on internet-scale pairs for transferable zero-shot recognition."),
+      entry("seed_mean_average_precision", "Mean Average Precision", "metric", "Metrics", ["mAP", "detection"], "", "", "Detection metric averaging precision over recall levels, classes, and often IoU thresholds."),
+      entry("seed_iou", "Intersection over Union", "metric", "Metrics", ["IoU", "overlap"], "", "", "Overlap metric computed as intersection area divided by union area for boxes or masks."),
+      entry("seed_dice", "Dice Coefficient", "metric", "Metrics", ["segmentation", "medical imaging"], "", "", "Segmentation overlap metric emphasizing twice the intersection over summed prediction and target sizes."),
+      entry("seed_fid", "Frechet Inception Distance", "metric", "Metrics", ["generative models", "FID"], "2017", "Common metric for image generation quality.", "Compares generated and real image distributions using Gaussian statistics in Inception feature space."),
+      entry("seed_psnr", "PSNR", "metric", "Metrics", ["image restoration", "signal quality"], "", "", "Peak signal-to-noise ratio, common in super-resolution and restoration but often weakly aligned with perceptual quality."),
+      entry("seed_ssim", "SSIM", "metric", "Metrics", ["image quality", "structure"], "2004", "Structural Similarity Index.", "Image quality metric comparing luminance, contrast, and structure rather than raw pixel error alone."),
+      entry("seed_top1_accuracy", "Top-1 Accuracy", "metric", "Metrics", ["classification", "accuracy"], "", "", "Classification metric counting examples where the highest-scoring predicted class matches the label."),
+      entry("seed_panoptic_quality", "Panoptic Quality", "metric", "Metrics", ["panoptic segmentation", "PQ"], "2018", "Metric introduced for panoptic segmentation.", "Combines recognition quality and segmentation quality for thing and stuff regions."),
+      entry("seed_convolution", "Convolution", "concept", "Core Concepts", ["filters", "translation equivariance"], "", "", "Local weighted operation that gives CNNs useful inductive bias for images through weight sharing and locality."),
+      entry("seed_feature_pyramid_network", "Feature Pyramid Network", "method", "Detection Methods", ["FPN", "multi-scale"], "2017", "FPN made multi-scale feature hierarchies standard in detection.", "Builds semantically strong features at multiple resolutions for objects of different sizes."),
+      entry("seed_non_maximum_suppression", "Non-Maximum Suppression", "method", "Detection Methods", ["NMS", "post-processing"], "", "", "Post-processing method that removes duplicate detections by suppressing lower-scoring boxes with high overlap."),
+      entry("seed_anchor_boxes", "Anchor Boxes", "concept", "Detection Methods", ["anchors", "priors"], "2015-present", "Anchor boxes shaped most pre-transformer detectors.", "Predefined box priors used to predict object location offsets and classes at many positions and scales."),
+      entry("seed_data_augmentation", "Data Augmentation", "method", "Training Methods", ["regularization", "robustness"], "", "", "Applies transformations such as crop, flip, color jitter, mixup, mosaic, and cutout to improve generalization."),
+      entry("seed_transfer_learning", "Transfer Learning", "method", "Training Methods", ["pretraining", "fine-tuning"], "", "", "Uses representations learned on one dataset or task as initialization for another task."),
+      entry("seed_self_supervised_learning", "Self-Supervised Visual Pretraining", "method", "Training Methods", ["SSL", "pretraining"], "2018-present", "Self-supervised learning reduced reliance on manual labels.", "Learns useful image representations from pretext, contrastive, masked, clustering, or teacher-student objectives."),
+      entry("seed_contrastive_learning", "Contrastive Learning", "method", "Training Methods", ["contrastive", "representation"], "2018-present", "Contrastive visual learning became central to self-supervised and vision-language models.", "Pulls related views or image-text pairs together while pushing unrelated examples apart in representation space."),
+      entry("seed_diffusion_process", "Diffusion Process", "concept", "Generative Models", ["denoising", "score matching"], "2020-present", "Diffusion became the dominant image generation paradigm.", "Learns to reverse a gradual noising process, often by predicting noise or denoised latents at each timestep."),
+      entry("seed_promptable_segmentation", "Promptable Segmentation", "concept", "Segmentation", ["SAM", "interactive vision"], "2023", "Promptable segmentation changed masks from fixed class predictions to interactive object selection.", "Segmentation conditioned on user or model prompts such as points, boxes, masks, or text-like interaction."),
+      entry("seed_open_vocabulary_detection", "Open-Vocabulary Detection", "task", "Detection", ["open vocabulary", "vision-language"], "2021-present", "Vision-language models enabled detectors beyond closed training categories.", "Detects objects described by arbitrary text labels rather than a fixed closed category set."),
+      entry("seed_coco_benchmark", "COCO Detection Benchmark", "benchmark", "Benchmarks", ["COCO", "mAP"], "2015-present", "COCO AP became the default detector comparison metric.", "Benchmark protocol using AP averaged across classes and IoU thresholds from 0.50 to 0.95."),
     ],
     bookPages: [
-      {
-        id: "seed_hamlet_overview",
-        entryId: "seed_hamlet",
-        title: "Overview",
-        content:
-          "Hamlet is useful as a research atlas because nearly every local problem opens into a larger scholarly route:\n\n- Succession and sovereignty\n- Mourning and theatricality\n- Revenge tragedy and legal delay\n- Surveillance, inwardness, and uncertain knowledge",
-        pageOrder: 1,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_hamlet_sovereignty",
-        entryId: "seed_hamlet",
-        title: "Sovereignty and Surveillance",
-        content:
-          "The court is not only a setting but an information system.\n\n- Claudius governs through watching, testing, and managed spectacle\n- Hamlet's delay is partly a crisis of evidence\n- Political legitimacy becomes inseparable from performance",
-        pageOrder: 2,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_hamlet_theatre",
-        entryId: "seed_hamlet",
-        title: "Theatre and Epistemology",
-        content:
-          "The play repeatedly asks whether performance reveals truth or merely produces another surface.\n\n- The Mousetrap converts theatre into experiment\n- Feigned madness makes sincerity unreadable\n- Soliloquy becomes both disclosure and staged self-scrutiny",
-        pageOrder: 3,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_hamlet_motifs",
-        entryId: "seed_hamlet",
-        title: "Motifs to Track",
-        content:
-          "- Rot, rankness, and bodily corruption\n- Ears, poison, and the vulnerability of reception\n- Books, tablets, and memory as inscription\n- Skulls and theatrical objects as condensed mortality",
-        pageOrder: 4,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_paradise_overview",
-        entryId: "seed_paradise_lost",
-        title: "Overview",
-        content:
-          "Paradise Lost turns epic scale into a problem of interpretation: how can a fallen reader judge obedience, liberty, heroism, and eloquence after the Fall?",
-        pageOrder: 1,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_paradise_argument",
-        entryId: "seed_paradise_lost",
-        title: "Epic Argument",
-        content:
-          "- Begins in medias res but frames cosmic history as moral argument\n- Reworks classical epic machinery through Christian theology\n- Makes heroic energy suspect when it appears as Satanic charisma",
-        pageOrder: 2,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_paradise_satanic_rhetoric",
-        entryId: "seed_paradise_lost",
-        title: "Satanic Rhetoric",
-        content:
-          "Satan's speeches are powerful because they convert injury into political theatre.\n\nResearch note: track where republican vocabulary becomes demonic self-authorization rather than simple Miltonic endorsement.",
-        pageOrder: 3,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_paradise_blank_verse",
-        entryId: "seed_paradise_lost",
-        title: "Blank Verse Notes",
-        content:
-          "Milton's syntax delays closure, stretches causality, and asks the reader to hold theological and grammatical suspense across long verse paragraphs.",
-        pageOrder: 4,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_waste_overview",
-        entryId: "seed_waste_land",
-        title: "Overview",
-        content:
-          "The Waste Land can be mapped as a poem of broken mediation: fragments of ritual, quotation, urban speech, prophecy, song, and scholarly annotation compete for authority.",
-        pageOrder: 1,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_waste_fragment",
-        entryId: "seed_waste_land",
-        title: "Fragment and Allusion",
-        content:
-          "- Allusion does not simply restore tradition; it exposes tradition as damaged, partial, and overdetermined\n- Fragmentation is both historical symptom and compositional method\n- The notes stage scholarship as part of the poem's unstable apparatus",
-        pageOrder: 2,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_waste_ritual",
-        entryId: "seed_waste_land",
-        title: "Ritual and Anthropology",
-        content:
-          "The poem borrows ritual frameworks from comparative anthropology, but the result is not a stable key. Treat Frazer and Weston as part of the poem's method of anxious pattern-making.",
-        pageOrder: 3,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_waste_voices",
-        entryId: "seed_waste_land",
-        title: "Urban Voices",
-        content:
-          "The city appears as a pressure chamber of overheard voices, exhausted desire, commodity culture, and broken forms of address.",
-        pageOrder: 4,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
+      page("seed_cv_foundations_overview", "seed_cv_foundations", "Overview", "Computer vision is the study of making images computationally useful.\n\n- Image formation and geometry\n- Recognition and dense prediction\n- Motion and 3D perception\n- Vision-language and generative models", 1),
+      page("seed_cv_foundations_axes", "seed_cv_foundations", "Core Axes", "- What is in the image?\n- Where is it?\n- What changed over time?\n- What 3D structure caused this 2D projection?\n- Which language concepts can ground the visual evidence?", 2),
+      page("seed_cv_foundations_failures", "seed_cv_foundations", "Failure Modes", "- Dataset bias and shortcut learning\n- Small objects and occlusion\n- Domain shift\n- Long-tail categories\n- Calibration and robustness under distribution shift", 3),
+      page("seed_object_detection_overview", "seed_object_detection", "Overview", "Detection predicts object categories and spatial boxes.\n\nThe central design tradeoff is often accuracy versus latency, with additional pressure from long-tail labels and crowded scenes.", 1),
+      page("seed_object_detection_families", "seed_object_detection", "Detector Families", "- Two-stage: R-CNN, Faster R-CNN, Mask R-CNN\n- One-stage: SSD, YOLO, RetinaNet\n- Anchor-free: FCOS, CenterNet\n- Transformer: DETR and variants\n- Open-vocabulary: CLIP-conditioned detectors", 2),
+      page("seed_object_detection_eval", "seed_object_detection", "Evaluation Notes", "COCO AP averages over IoU thresholds, so box quality matters more than in older AP@0.5 reporting.\n\nTrack small, medium, and large object AP separately.", 3),
+      page("seed_segmentation_overview", "seed_segmentation", "Overview", "Segmentation turns recognition into spatial delineation. It can mean class-level regions, individual masks, panoptic scene decomposition, or promptable masks.", 1),
+      page("seed_segmentation_types", "seed_segmentation", "Segmentation Types", "- Semantic: every pixel gets a class\n- Instance: each object instance gets a mask\n- Panoptic: things plus stuff\n- Promptable: user/model prompts condition the mask", 2),
+      page("seed_vision_transformers_overview", "seed_vision_transformers", "Overview", "Vision transformers replace fixed convolutional locality with token mixing through attention. The key questions are scale, data, inductive bias, and dense prediction adaptation.", 1),
+      page("seed_vision_transformers_variants", "seed_vision_transformers", "Variants", "- ViT: global patch tokens\n- DeiT: data-efficient training\n- Swin: shifted local windows and hierarchy\n- MAE: masked image modeling\n- DETR: transformer set prediction for detection", 2),
+      page("seed_generative_vision_overview", "seed_generative_vision", "Overview", "Generative vision models learn image distributions for synthesis, editing, restoration, representation learning, and controlled generation.", 1),
+      page("seed_generative_vision_diffusion", "seed_generative_vision", "Diffusion Notes", "Diffusion models learn denoising trajectories. Latent diffusion reduces compute by operating in compressed latent space while retaining perceptual structure.", 2),
     ],
     contentBlocks: [],
     relations: [
-      makeRelation("seed_rel_hamlet_negative_capability", "seed_hamlet", "seed_negative_capability", "anticipates", timestamp),
-      makeRelation("seed_rel_hamlet_elegy", "seed_hamlet", "seed_elegy", "disturbs", timestamp),
-      makeRelation("seed_rel_paradise_pastoral", "seed_paradise_lost", "seed_pastoral", "reworks", timestamp),
-      makeRelation("seed_rel_paradise_elegy", "seed_paradise_lost", "seed_elegy", "contains", timestamp),
-      makeRelation("seed_rel_waste_allusion", "seed_waste_land", "seed_allusion", "depends on", timestamp),
-      makeRelation("seed_rel_waste_elegy", "seed_waste_land", "seed_elegy", "modernizes", timestamp),
-      makeRelation("seed_rel_waste_pastoral", "seed_waste_land", "seed_pastoral", "ironizes", timestamp),
-      makeRelation("seed_rel_ekphrasis_allusion", "seed_ekphrasis", "seed_allusion", "overlaps with", timestamp),
-      makeRelation("seed_rel_free_indirect_negative", "seed_free_indirect_discourse", "seed_negative_capability", "creates space for", timestamp),
-      makeRelation("seed_rel_metaphysical_ekphrasis", "seed_metaphysical_conceit", "seed_ekphrasis", "contrasts with", timestamp),
+      makeRelation("seed_rel_cv_classification", "seed_cv_foundations", "seed_image_classification", "contains", timestamp),
+      makeRelation("seed_rel_cv_detection", "seed_cv_foundations", "seed_object_detection", "contains", timestamp),
+      makeRelation("seed_rel_cv_segmentation", "seed_cv_foundations", "seed_segmentation", "contains", timestamp),
+      makeRelation("seed_rel_detection_map", "seed_object_detection", "seed_mean_average_precision", "evaluated by", timestamp),
+      makeRelation("seed_rel_detection_iou", "seed_object_detection", "seed_iou", "depends on", timestamp),
+      makeRelation("seed_rel_seg_iou", "seed_segmentation", "seed_iou", "evaluated by", timestamp),
+      makeRelation("seed_rel_seg_dice", "seed_segmentation", "seed_dice", "evaluated by", timestamp),
+      makeRelation("seed_rel_panoptic_pq", "seed_panoptic_segmentation", "seed_panoptic_quality", "evaluated by", timestamp),
+      makeRelation("seed_rel_alexnet_imagenet", "seed_alexnet", "seed_imagenet", "trained on", timestamp),
+      makeRelation("seed_rel_alexnet_paper", "seed_alexnet_paper", "seed_alexnet", "introduces", timestamp),
+      makeRelation("seed_rel_resnet_paper", "seed_resnet_paper", "seed_resnet", "introduces", timestamp),
+      makeRelation("seed_rel_vit_paper", "seed_vit_paper", "seed_vit", "introduces", timestamp),
+      makeRelation("seed_rel_detr_paper", "seed_detr_paper", "seed_detr", "introduces", timestamp),
+      makeRelation("seed_rel_mask_paper", "seed_mask_rcnn_paper", "seed_mask_rcnn", "introduces", timestamp),
+      makeRelation("seed_rel_unet_paper", "seed_unet_paper", "seed_unet", "introduces", timestamp),
+      makeRelation("seed_rel_sam_paper", "seed_sam_paper", "seed_sam", "introduces", timestamp),
+      makeRelation("seed_rel_clip_paper", "seed_clip_paper", "seed_clip", "introduces", timestamp),
+      makeRelation("seed_rel_faster_coco", "seed_faster_rcnn", "seed_coco", "evaluated on", timestamp),
+      makeRelation("seed_rel_yolo_coco", "seed_yolo", "seed_coco", "evaluated on", timestamp),
+      makeRelation("seed_rel_mask_coco", "seed_mask_rcnn", "seed_coco", "evaluated on", timestamp),
+      makeRelation("seed_rel_deeplab_city", "seed_deeplab", "seed_cityscapes", "evaluated on", timestamp),
+      makeRelation("seed_rel_unet_seg", "seed_unet", "seed_segmentation", "used for", timestamp),
+      makeRelation("seed_rel_sam_prompt", "seed_sam", "seed_promptable_segmentation", "enables", timestamp),
+      makeRelation("seed_rel_clip_open_vocab", "seed_clip", "seed_open_vocabulary_detection", "supports", timestamp),
+      makeRelation("seed_rel_detr_detection", "seed_detr", "seed_object_detection", "solves", timestamp),
+      makeRelation("seed_rel_fpn_detection", "seed_feature_pyramid_network", "seed_object_detection", "used in", timestamp),
+      makeRelation("seed_rel_nms_detection", "seed_non_maximum_suppression", "seed_object_detection", "post-processes", timestamp),
+      makeRelation("seed_rel_anchor_detection", "seed_anchor_boxes", "seed_object_detection", "parameterizes", timestamp),
+      makeRelation("seed_rel_diffusion_stable", "seed_diffusion_process", "seed_stable_diffusion", "underlies", timestamp),
+      makeRelation("seed_rel_stable_fid", "seed_stable_diffusion", "seed_fid", "evaluated by", timestamp),
+      makeRelation("seed_rel_ssl_dino", "seed_self_supervised_learning", "seed_dinov2", "underlies", timestamp),
+      makeRelation("seed_rel_contrastive_clip", "seed_contrastive_learning", "seed_clip", "underlies", timestamp),
     ],
     knowledgeGaps: [
-      makeGap(
-        "seed_gap_ophelia",
-        "seed_hamlet",
-        "Ophelia and lyric interruption",
-        "Separate Ophelia's songs as dramatic symptom, courtly archive, and gendered counter-memory.",
-        timestamp,
-      ),
-      makeGap(
-        "seed_gap_milton_matter",
-        "seed_paradise_lost",
-        "Miltonic matter and monism",
-        "Clarify how debates about spirit, matter, and monism affect readings of embodiment in Paradise Lost.",
-        timestamp,
-      ),
-      makeGap(
-        "seed_gap_waste_ritual",
-        "seed_waste_land",
-        "Frazer, Weston, and ritual method",
-        "Track when ritual anthropology functions as explanatory key, parody, or scholarly noise.",
-        timestamp,
-      ),
-      makeGap(
-        "seed_gap_austen_woolf",
-        "seed_free_indirect_discourse",
-        "Austen to Woolf transition",
-        "Map how free indirect discourse shifts from social irony toward interior duration and modernist perception.",
-        timestamp,
-      ),
-      makeGap(
-        "seed_gap_antipastoral",
-        "seed_pastoral",
-        "Anti-pastoral after enclosure",
-        "Collect examples where rural retreat exposes labor, dispossession, or ecological damage rather than harmony.",
-        timestamp,
-      ),
+      makeGap("seed_gap_detector_calibration", "seed_object_detection", "Detector calibration under domain shift", "Track whether confidence scores remain meaningful when detectors move from COCO-like images to production footage.", timestamp),
+      makeGap("seed_gap_small_objects", "seed_object_detection", "Small object AP failure cases", "Collect examples where FPNs, anchors, or input resolution dominate detection quality.", timestamp),
+      makeGap("seed_gap_seg_boundaries", "seed_segmentation", "Boundary quality versus region IoU", "Separate metrics and visual checks for boundary precision from coarse mask overlap.", timestamp),
+      makeGap("seed_gap_vit_data_scale", "seed_vision_transformers", "ViT data scale requirements", "Compare when transformers need large pretraining versus when convolutional inductive bias still helps.", timestamp),
+      makeGap("seed_gap_diffusion_eval", "seed_generative_vision", "Diffusion evaluation beyond FID", "Collect metrics and human-evaluation protocols for prompt alignment, diversity, artifacts, and safety.", timestamp),
+      makeGap("seed_gap_open_vocab_long_tail", "seed_open_vocabulary_detection", "Open-vocabulary long-tail behavior", "Track how text prompts, base classes, and unseen categories affect detector reliability.", timestamp),
     ],
     trails: [
       {
-        id: "seed_trail_tragedy_knowledge",
-        title: "Early Modern Tragedy and Knowledge",
-        description: "A route through uncertainty, theatrical evidence, and figures of unresolved thought.",
+        id: "seed_trail_detection_stack",
+        title: "Object Detection Stack",
+        description: "A route from task definition through detector families, datasets, and metrics.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
       {
-        id: "seed_trail_form_history",
-        title: "Form, Loss, and Historical Pressure",
-        description: "A route from elegiac form into epic fallenness and modernist fragmentation.",
+        id: "seed_trail_segmentation_stack",
+        title: "Segmentation Stack",
+        description: "A route through dense prediction, masks, promptable segmentation, and evaluation.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
       {
-        id: "seed_trail_mediation",
-        title: "Modes of Mediation",
-        description: "A compact path through image, reference, narration, and interpretive distance.",
+        id: "seed_trail_foundation_models",
+        title: "Vision Foundation Models",
+        description: "A route through scalable pretraining, vision-language alignment, and promptable vision.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
     ],
     trailItems: [
-      makeTrailItem("seed_trail_tragedy_knowledge_item_0", "seed_trail_tragedy_knowledge", "seed_hamlet", 1, "Begin with drama as an engine of uncertain evidence.", timestamp),
-      makeTrailItem("seed_trail_tragedy_knowledge_item_1", "seed_trail_tragedy_knowledge", "seed_metaphysical_conceit", 2, "Move to difficult figuration as argumentative pressure.", timestamp),
-      makeTrailItem("seed_trail_tragedy_knowledge_item_2", "seed_trail_tragedy_knowledge", "seed_negative_capability", 3, "End with a poetics of remaining inside uncertainty.", timestamp),
-      makeTrailItem("seed_trail_form_history_item_0", "seed_trail_form_history", "seed_elegy", 1, "Start with loss as genre and ritual problem.", timestamp),
-      makeTrailItem("seed_trail_form_history_item_1", "seed_trail_form_history", "seed_paradise_lost", 2, "Scale loss into epic fallenness and theological history.", timestamp),
-      makeTrailItem("seed_trail_form_history_item_2", "seed_trail_form_history", "seed_waste_land", 3, "Watch modernism inherit epic and elegy as fragments.", timestamp),
-      makeTrailItem("seed_trail_mediation_item_0", "seed_trail_mediation", "seed_ekphrasis", 1, "Start with word-image mediation.", timestamp),
-      makeTrailItem("seed_trail_mediation_item_1", "seed_trail_mediation", "seed_allusion", 2, "Move to reference as compressed historical relation.", timestamp),
-      makeTrailItem("seed_trail_mediation_item_2", "seed_trail_mediation", "seed_free_indirect_discourse", 3, "End with narration as mediated consciousness.", timestamp),
+      makeTrailItem("seed_trail_detection_stack_item_0", "seed_trail_detection_stack", "seed_object_detection", 1, "Start with the task and problem shape.", timestamp),
+      makeTrailItem("seed_trail_detection_stack_item_1", "seed_trail_detection_stack", "seed_faster_rcnn", 2, "Study two-stage proposal-based detection.", timestamp),
+      makeTrailItem("seed_trail_detection_stack_item_2", "seed_trail_detection_stack", "seed_yolo", 3, "Compare one-stage real-time detection.", timestamp),
+      makeTrailItem("seed_trail_detection_stack_item_3", "seed_trail_detection_stack", "seed_detr", 4, "Move to transformer set prediction.", timestamp),
+      makeTrailItem("seed_trail_detection_stack_item_4", "seed_trail_detection_stack", "seed_mean_average_precision", 5, "End with the evaluation metric.", timestamp),
+      makeTrailItem("seed_trail_segmentation_stack_item_0", "seed_trail_segmentation_stack", "seed_segmentation", 1, "Start with segmentation variants.", timestamp),
+      makeTrailItem("seed_trail_segmentation_stack_item_1", "seed_trail_segmentation_stack", "seed_unet", 2, "Study encoder-decoder masks.", timestamp),
+      makeTrailItem("seed_trail_segmentation_stack_item_2", "seed_trail_segmentation_stack", "seed_mask_rcnn", 3, "Connect detection to instance masks.", timestamp),
+      makeTrailItem("seed_trail_segmentation_stack_item_3", "seed_trail_segmentation_stack", "seed_sam", 4, "Move to promptable segmentation.", timestamp),
+      makeTrailItem("seed_trail_foundation_models_item_0", "seed_trail_foundation_models", "seed_self_supervised_learning", 1, "Start with label-free visual pretraining.", timestamp),
+      makeTrailItem("seed_trail_foundation_models_item_1", "seed_trail_foundation_models", "seed_vit", 2, "Study scalable transformer backbones.", timestamp),
+      makeTrailItem("seed_trail_foundation_models_item_2", "seed_trail_foundation_models", "seed_clip", 3, "Add language supervision.", timestamp),
+      makeTrailItem("seed_trail_foundation_models_item_3", "seed_trail_foundation_models", "seed_dinov2", 4, "Compare self-supervised foundation features.", timestamp),
+      makeTrailItem("seed_trail_foundation_models_item_4", "seed_trail_foundation_models", "seed_sam", 5, "End with promptable foundation segmentation.", timestamp),
     ],
   };
 
   return normalizeData(data);
 };
 
-const legacySeedEntryIds = new Set([
+const previousSeedEntryIds = new Set([
   "seed_clip",
   "seed_downstream_task",
   "seed_contrastive_learning",
@@ -409,74 +277,83 @@ const legacySeedEntryIds = new Set([
   "seed_hamlet",
   "seed_death",
   "seed_motif",
+  "seed_paradise_lost",
+  "seed_waste_land",
+  "seed_negative_capability",
+  "seed_elegy",
+  "seed_ekphrasis",
+  "seed_pastoral",
+  "seed_free_indirect_discourse",
+  "seed_metaphysical_conceit",
+  "seed_allusion",
 ]);
 
-const legacySeedPageIds = new Set([
-  "seed_clip_overview",
-  "seed_clip_core",
-  "seed_clip_confusions",
-  "seed_clip_notes",
-  "seed_hamlet_overview",
-  "seed_hamlet_motifs",
+const previousSeedTrailIds = new Set([
+  "seed_trail_vlm",
+  "seed_trail_death_lit",
+  "seed_trail_tragedy_knowledge",
+  "seed_trail_form_history",
+  "seed_trail_mediation",
 ]);
 
-const legacySeedTrailIds = new Set(["seed_trail_vlm", "seed_trail_death_lit"]);
+const shouldReplacePreviousSeed = (data: AppData) =>
+  !data.entries.some((entry) => entry.id === "seed_cv_foundations") &&
+  data.entries.some((entry) => previousSeedEntryIds.has(entry.id));
 
-const shouldReplaceLegacySeed = (data: AppData) =>
-  data.entries.some((entry) => entry.id === "seed_clip") &&
-  !data.entries.some((entry) => entry.id === "seed_waste_land");
-
-const replaceLegacySeedData = (data: AppData): AppData => {
-  if (!shouldReplaceLegacySeed(data)) {
+const replacePreviousSeedData = (data: AppData): AppData => {
+  if (!shouldReplacePreviousSeed(data)) {
     return data;
   }
 
-  const literatureSeed = seedData();
-  const legacyPageIds = new Set([
-    ...legacySeedPageIds,
-    ...data.bookPages
-      .filter((page) => legacySeedEntryIds.has(page.entryId))
+  const cvSeed = seedData();
+  const previousPageIds = new Set(
+    data.bookPages
+      .filter((page) => previousSeedEntryIds.has(page.entryId))
       .map((page) => page.id),
-  ]);
+  );
 
   return normalizeData({
     entries: [
-      ...data.entries.filter((entry) => !legacySeedEntryIds.has(entry.id)),
-      ...literatureSeed.entries,
+      ...data.entries.filter((entry) => !previousSeedEntryIds.has(entry.id)),
+      ...cvSeed.entries,
     ],
     bookPages: [
       ...data.bookPages.filter(
-        (page) => !legacySeedEntryIds.has(page.entryId) && !legacyPageIds.has(page.id),
+        (page) => !previousSeedEntryIds.has(page.entryId) && !previousPageIds.has(page.id),
       ),
-      ...literatureSeed.bookPages,
+      ...cvSeed.bookPages,
     ],
     contentBlocks: [
       ...data.contentBlocks.filter(
         (block) =>
-          !(block.ownerType === "entry" && legacySeedEntryIds.has(block.ownerId)) &&
-          !(block.ownerType === "book_page" && legacyPageIds.has(block.ownerId)),
+          !(block.ownerType === "entry" && previousSeedEntryIds.has(block.ownerId)) &&
+          !(block.ownerType === "book_page" && previousPageIds.has(block.ownerId)),
       ),
-      ...literatureSeed.contentBlocks,
+      ...cvSeed.contentBlocks,
     ],
     relations: [
       ...data.relations.filter(
         (relation) =>
-          !legacySeedEntryIds.has(relation.fromEntryId) &&
-          !legacySeedEntryIds.has(relation.toEntryId),
+          !previousSeedEntryIds.has(relation.fromEntryId) &&
+          !previousSeedEntryIds.has(relation.toEntryId),
       ),
-      ...literatureSeed.relations,
+      ...cvSeed.relations,
     ],
     knowledgeGaps: [
-      ...data.knowledgeGaps.filter((gap) => !legacySeedEntryIds.has(gap.entryId)),
-      ...literatureSeed.knowledgeGaps,
+      ...data.knowledgeGaps.filter((gap) => !previousSeedEntryIds.has(gap.entryId)),
+      ...cvSeed.knowledgeGaps,
     ],
     trails: [
-      ...data.trails.filter((trail) => !legacySeedTrailIds.has(trail.id)),
-      ...literatureSeed.trails,
+      ...data.trails.filter((trail) => !previousSeedTrailIds.has(trail.id)),
+      ...cvSeed.trails,
     ],
     trailItems: [
-      ...data.trailItems.filter((item) => !legacySeedTrailIds.has(item.trailId)),
-      ...literatureSeed.trailItems,
+      ...data.trailItems.filter(
+        (item) =>
+          !previousSeedTrailIds.has(item.trailId) &&
+          !previousSeedEntryIds.has(item.entryId),
+      ),
+      ...cvSeed.trailItems,
     ],
   });
 };
@@ -880,7 +757,7 @@ class DemoLexiconRepository implements LexiconRepository {
       return seeded;
     }
 
-    const normalized = replaceLegacySeedData(normalizeData(JSON.parse(raw) as Partial<AppData>));
+    const normalized = replacePreviousSeedData(normalizeData(JSON.parse(raw) as Partial<AppData>));
     this.write(normalized);
     return normalized;
   }

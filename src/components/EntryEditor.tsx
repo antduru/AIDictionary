@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { entryTypeLabels, entryTypeOptions } from "../types";
 import type { ContentBlock, ContentBlockInput, Entry, EntryInput, EntryType } from "../types";
 import { BlockEditor } from "./BlockEditor";
 import { blocksToInputs, projectBlocksToContent } from "../utils/blocks";
@@ -64,8 +65,11 @@ export function EntryEditor({ entry, blocks, onSave, onCancel }: EntryEditorProp
             value={entryType}
             onChange={(event) => setEntryType(event.target.value as EntryType)}
           >
-            <option value="entry">Entry</option>
-            <option value="book">Book</option>
+            {entryTypeOptions.map((type) => (
+              <option value={type} key={type}>
+                {entryTypeLabels[type]}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -88,7 +92,7 @@ export function EntryEditor({ entry, blocks, onSave, onCancel }: EntryEditorProp
           <input
             value={timelineDate}
             onChange={(event) => setTimelineDate(event.target.value)}
-            placeholder="1600, 1667, 19th century"
+            placeholder="2012, 2020, 2023"
           />
         </label>
 

@@ -34,7 +34,7 @@ npm install
 npm run tauri:dev
 ```
 
-This starts Vite and opens the Tauri desktop app. The SQLite database is created in the app data directory on first launch and is seeded with sample CLIP-related entries.
+This starts Vite and opens the Tauri desktop app. The SQLite database is created in the app data directory on first launch and is seeded with sample English literature research entries.
 
 For frontend-only inspection, you can run:
 

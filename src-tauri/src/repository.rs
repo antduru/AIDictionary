@@ -105,6 +105,7 @@ pub fn init_database(path: PathBuf) -> Result<Connection, String> {
 
     apply_migrations(&connection)?;
     seed_if_empty(&connection)?;
+    upgrade_legacy_demo_seed(&connection)?;
     migrate_legacy_content_to_blocks(&connection)?;
     Ok(connection)
 }
@@ -935,6 +936,89 @@ fn get_trail_item(connection: &Connection, id: &str) -> Result<TrailItem, String
         .map_err(|err| err.to_string())
 }
 
+fn upgrade_legacy_demo_seed(connection: &Connection) -> Result<(), String> {
+    let has_legacy_seed = connection
+        .query_row(
+            "SELECT 1 FROM entries WHERE id = 'seed_clip' LIMIT 1",
+            [],
+            |row| row.get::<_, i64>(0),
+        )
+        .optional()
+        .map_err(|err| err.to_string())?
+        .is_some();
+    let has_literature_seed = connection
+        .query_row(
+            "SELECT 1 FROM entries WHERE id = 'seed_waste_land' LIMIT 1",
+            [],
+            |row| row.get::<_, i64>(0),
+        )
+        .optional()
+        .map_err(|err| err.to_string())?
+        .is_some();
+
+    if !has_legacy_seed || has_literature_seed {
+        return Ok(());
+    }
+
+    connection
+        .execute_batch(
+            "
+            DELETE FROM content_blocks
+            WHERE owner_id IN (
+                'seed_clip', 'seed_downstream_task', 'seed_contrastive_learning',
+                'seed_zero_shot', 'seed_hamlet', 'seed_death', 'seed_motif',
+                'seed_clip_overview', 'seed_clip_core', 'seed_clip_confusions',
+                'seed_clip_notes', 'seed_hamlet_overview', 'seed_hamlet_motifs'
+            );
+
+            DELETE FROM trail_items
+            WHERE trail_id IN ('seed_trail_vlm', 'seed_trail_death_lit')
+               OR entry_id IN (
+                'seed_clip', 'seed_downstream_task', 'seed_contrastive_learning',
+                'seed_zero_shot', 'seed_hamlet', 'seed_death', 'seed_motif'
+               );
+
+            DELETE FROM trails
+            WHERE id IN ('seed_trail_vlm', 'seed_trail_death_lit');
+
+            DELETE FROM knowledge_gaps
+            WHERE entry_id IN (
+                'seed_clip', 'seed_downstream_task', 'seed_contrastive_learning',
+                'seed_zero_shot', 'seed_hamlet', 'seed_death', 'seed_motif'
+            );
+
+            DELETE FROM relations
+            WHERE from_entry_id IN (
+                'seed_clip', 'seed_downstream_task', 'seed_contrastive_learning',
+                'seed_zero_shot', 'seed_hamlet', 'seed_death', 'seed_motif'
+            )
+               OR to_entry_id IN (
+                'seed_clip', 'seed_downstream_task', 'seed_contrastive_learning',
+                'seed_zero_shot', 'seed_hamlet', 'seed_death', 'seed_motif'
+            );
+
+            DELETE FROM book_pages
+            WHERE entry_id IN (
+                'seed_clip', 'seed_downstream_task', 'seed_contrastive_learning',
+                'seed_zero_shot', 'seed_hamlet', 'seed_death', 'seed_motif'
+            )
+               OR id IN (
+                'seed_clip_overview', 'seed_clip_core', 'seed_clip_confusions',
+                'seed_clip_notes', 'seed_hamlet_overview', 'seed_hamlet_motifs'
+            );
+
+            DELETE FROM entries
+            WHERE id IN (
+                'seed_clip', 'seed_downstream_task', 'seed_contrastive_learning',
+                'seed_zero_shot', 'seed_hamlet', 'seed_death', 'seed_motif'
+            );
+            ",
+        )
+        .map_err(|err| err.to_string())?;
+
+    insert_literature_seed(connection)
+}
+
 fn seed_if_empty(connection: &Connection) -> Result<(), String> {
     let count: i64 = connection
         .query_row("SELECT COUNT(*) FROM entries", [], |row| row.get(0))
@@ -944,75 +1028,109 @@ fn seed_if_empty(connection: &Connection) -> Result<(), String> {
         return Ok(());
     }
 
+    insert_literature_seed(connection)
+}
+
+fn insert_literature_seed(connection: &Connection) -> Result<(), String> {
     let now = timestamp();
     let entries = [
-        (
-            "seed_clip",
-            "CLIP",
-            "book",
-            "A personal mini-book for understanding Contrastive Language-Image Pre-training and its place in representation learning.",
-            "Machine Learning",
-            vec!["model", "paper", "vision-language"],
-            "2021",
-            "Introduced as a major vision-language representation model.",
-        ),
-        (
-            "seed_downstream_task",
-            "Downstream Task",
-            "entry",
-            "A task that uses representations, checkpoints, or learned features from a prior training process.\n\nExamples include classification, retrieval, detection, ranking, or evaluation tasks built on top of a pretrained model.",
-            "Machine Learning",
-            vec!["evaluation", "transfer-learning"],
-            "",
-            "",
-        ),
-        (
-            "seed_contrastive_learning",
-            "Contrastive Learning",
-            "entry",
-            "A learning setup that pulls related examples closer in representation space while pushing unrelated examples apart.\n\nUseful mental handle: it teaches a model to organize similarity rather than memorize labels.",
-            "Machine Learning",
-            vec!["representation-learning"],
-            "modern ML",
-            "A recurring organizing method for representation learning.",
-        ),
-        (
-            "seed_zero_shot",
-            "Zero-Shot Classification",
-            "entry",
-            "Classification without task-specific labeled examples for the target labels.\n\nIn CLIP-style workflows, labels can be expressed as text prompts and compared with image representations.",
-            "Machine Learning",
-            vec!["evaluation", "classification"],
-            "",
-            "",
-        ),
         (
             "seed_hamlet",
             "Hamlet",
             "book",
-            "A nested literary atlas for tracking motifs, death, hesitation, theatricality, and decay.",
-            "English Literature",
-            vec!["play", "tragedy", "Shakespeare"],
+            "A nested atlas for reading Hamlet through sovereignty, theatrical knowledge, mourning, succession, and forms of delay.",
+            "Early Modern Drama",
+            vec!["Shakespeare", "tragedy", "revenge tragedy", "epistemology"],
             "1600",
-            "Approximate composition period.",
+            "Approximate composition period; useful for locating the play near succession anxiety and late Elizabethan theatrical culture.",
         ),
         (
-            "seed_death",
-            "Death",
-            "entry",
-            "A flexible theme entry for tracking death as theology, bodily decline, political inheritance, and dramatic atmosphere.",
-            "English Literature",
-            vec!["theme", "literature"],
-            "recurring theme",
-            "Useful across periods rather than a single dated event.",
+            "seed_paradise_lost",
+            "Paradise Lost",
+            "book",
+            "A Miltonic mini-book for epic form, obedience, liberty, fallenness, republican memory, and the pressure of theology on poetic syntax.",
+            "Restoration Epic",
+            vec!["Milton", "epic", "blank verse", "theology", "republicanism"],
+            "1667",
+            "First published in ten books in 1667; revised into twelve books in 1674.",
         ),
         (
-            "seed_motif",
-            "Motif",
+            "seed_waste_land",
+            "The Waste Land",
+            "book",
+            "A modernist mini-book for allusion, fragmentation, ritual method, urban voices, and the problem of cultural inheritance after catastrophe.",
+            "Modernist Poetry",
+            vec!["Eliot", "modernism", "allusion", "fragment", "ritual"],
+            "1922",
+            "Published in the high modernist annus mirabilis alongside Ulysses and Jacob's Room.",
+        ),
+        (
+            "seed_negative_capability",
+            "Negative Capability",
             "entry",
-            "A recurring image, structure, phrase, or object that gathers meaning across a work or corpus.",
-            "Literary Method",
-            vec!["method", "analysis"],
+            "Keats's name for the poet's capacity to remain with uncertainty, mystery, and unresolved contradiction without converting them too quickly into doctrine.\n\nIn PhD-level use, treat it less as a slogan for vagueness and more as a theory of suspended epistemic mastery.",
+            "Romantic Poetics",
+            vec!["Keats", "Romanticism", "poetics", "uncertainty"],
+            "1817",
+            "Formulated in Keats's December 1817 letter to George and Thomas Keats.",
+        ),
+        (
+            "seed_elegy",
+            "Elegy",
+            "entry",
+            "A mode of writing organized by loss, consolation, memorial address, and the instability of surviving speech.\n\nUseful axis: public commemoration versus private grief; ritual closure versus melancholic repetition.",
+            "Genre and Form",
+            vec!["genre", "mourning", "lyric", "death"],
+            "classical to modern",
+            "A durable form that shifts from classical lament to modern meditations on historical rupture.",
+        ),
+        (
+            "seed_ekphrasis",
+            "Ekphrasis",
+            "entry",
+            "The verbal representation of visual art or visual experience, often staging rivalry between media, spectatorship, and interpretation.\n\nTrack who controls the gaze, what the described object withholds, and whether description becomes possession.",
+            "Rhetoric and Media",
+            vec!["rhetoric", "visuality", "aesthetics", "media"],
+            "ancient rhetoric",
+            "A classical rhetorical term that becomes central to modern theories of word-image relations.",
+        ),
+        (
+            "seed_pastoral",
+            "Pastoral",
+            "entry",
+            "A mode that imagines rural retreat in order to think about labor, artifice, class, enclosure, ecology, and political disappointment.\n\nDo not reduce pastoral to scenery; its force often lies in the friction between idealized withdrawal and material history.",
+            "Genre and Mode",
+            vec!["genre", "ecology", "class", "landscape"],
+            "classical to modern",
+            "From Theocritus and Virgil through Renaissance eclogue, Romantic retreat, and modern anti-pastoral.",
+        ),
+        (
+            "seed_free_indirect_discourse",
+            "Free Indirect Discourse",
+            "entry",
+            "A narrative technique in which third-person narration absorbs a character's idiom, judgments, or perceptual field without direct quotation.\n\nIt is especially useful for tracking irony, social cognition, and the unstable boundary between narrator and character.",
+            "Narratology",
+            vec!["novel", "narration", "Austen", "irony"],
+            "19th century",
+            "Frequently associated with Austen and later realist or modernist fiction.",
+        ),
+        (
+            "seed_metaphysical_conceit",
+            "Metaphysical Conceit",
+            "entry",
+            "An intellectually strenuous figure that joins remote fields of experience into a single argumentative image.\n\nIn Donne and later criticism, the conceit is not ornamental excess but a pressure point where theology, erotic address, and logical wit meet.",
+            "Early Modern Poetry",
+            vec!["Donne", "metaphysical poetry", "rhetoric", "wit"],
+            "17th century",
+            "A retrospective critical category shaped by eighteenth-century and modern accounts of metaphysical poetry.",
+        ),
+        (
+            "seed_allusion",
+            "Allusion",
+            "entry",
+            "A compressed reference that activates another text, tradition, myth, event, or interpretive frame without fully absorbing it.\n\nAt doctoral level, ask what allusion authorizes, excludes, misremembers, or makes newly available under historical pressure.",
+            "Intertextuality",
+            vec!["method", "intertextuality", "modernism", "classics"],
             "",
             "",
         ),
@@ -1046,46 +1164,88 @@ fn seed_if_empty(connection: &Connection) -> Result<(), String> {
 
     let pages = [
         (
-            "seed_clip_overview",
-            "seed_clip",
-            "Overview",
-            "CLIP learns a shared image-text space.\n\n- Images and captions are embedded near each other\n- Similarity supports retrieval and classification\n- The model is often used without training a task-specific classifier",
-            1,
-        ),
-        (
-            "seed_clip_core",
-            "seed_clip",
-            "Core Idea",
-            "Instead of predicting a fixed class label, CLIP compares image representations with text representations.\n\n- Positive pairs are matched image-caption examples\n- Negative pairs are other examples in the batch\n- The objective rewards correct alignment across modalities",
-            2,
-        ),
-        (
-            "seed_clip_confusions",
-            "seed_clip",
-            "Common Confusions",
-            "- CLIP is not only an image classifier\n- Zero-shot performance depends heavily on prompts and label wording\n- Contrastive training is the training setup, not the final use case",
-            3,
-        ),
-        (
-            "seed_clip_notes",
-            "seed_clip",
-            "My Notes",
-            "Questions to revisit:\n\n- How temperature changes embedding separation\n- How prompt templates shift class scores\n- Where CLIP fails on fine-grained categories",
-            4,
-        ),
-        (
             "seed_hamlet_overview",
             "seed_hamlet",
             "Overview",
-            "Hamlet can be read as an atlas of decay, delay, inheritance, theatre, death, and unstable knowledge.",
+            "Hamlet is useful as a research atlas because nearly every local problem opens into a larger scholarly route:\n\n- Succession and sovereignty\n- Mourning and theatricality\n- Revenge tragedy and legal delay\n- Surveillance, inwardness, and uncertain knowledge",
             1,
+        ),
+        (
+            "seed_hamlet_sovereignty",
+            "seed_hamlet",
+            "Sovereignty and Surveillance",
+            "The court is not only a setting but an information system.\n\n- Claudius governs through watching, testing, and managed spectacle\n- Hamlet's delay is partly a crisis of evidence\n- Political legitimacy becomes inseparable from performance",
+            2,
+        ),
+        (
+            "seed_hamlet_theatre",
+            "seed_hamlet",
+            "Theatre and Epistemology",
+            "The play repeatedly asks whether performance reveals truth or merely produces another surface.\n\n- The Mousetrap converts theatre into experiment\n- Feigned madness makes sincerity unreadable\n- Soliloquy becomes both disclosure and staged self-scrutiny",
+            3,
         ),
         (
             "seed_hamlet_motifs",
             "seed_hamlet",
-            "Motifs",
-            "- Decay and corruption\n- Ghostly inheritance\n- Performed madness\n- The skull as compressed mortality",
+            "Motifs to Track",
+            "- Rot, rankness, and bodily corruption\n- Ears, poison, and the vulnerability of reception\n- Books, tablets, and memory as inscription\n- Skulls and theatrical objects as condensed mortality",
+            4,
+        ),
+        (
+            "seed_paradise_overview",
+            "seed_paradise_lost",
+            "Overview",
+            "Paradise Lost turns epic scale into a problem of interpretation: how can a fallen reader judge obedience, liberty, heroism, and eloquence after the Fall?",
+            1,
+        ),
+        (
+            "seed_paradise_argument",
+            "seed_paradise_lost",
+            "Epic Argument",
+            "- Begins in medias res but frames cosmic history as moral argument\n- Reworks classical epic machinery through Christian theology\n- Makes heroic energy suspect when it appears as Satanic charisma",
             2,
+        ),
+        (
+            "seed_paradise_satanic_rhetoric",
+            "seed_paradise_lost",
+            "Satanic Rhetoric",
+            "Satan's speeches are powerful because they convert injury into political theatre.\n\nResearch note: track where republican vocabulary becomes demonic self-authorization rather than simple Miltonic endorsement.",
+            3,
+        ),
+        (
+            "seed_paradise_blank_verse",
+            "seed_paradise_lost",
+            "Blank Verse Notes",
+            "Milton's syntax delays closure, stretches causality, and asks the reader to hold theological and grammatical suspense across long verse paragraphs.",
+            4,
+        ),
+        (
+            "seed_waste_overview",
+            "seed_waste_land",
+            "Overview",
+            "The Waste Land can be mapped as a poem of broken mediation: fragments of ritual, quotation, urban speech, prophecy, song, and scholarly annotation compete for authority.",
+            1,
+        ),
+        (
+            "seed_waste_fragment",
+            "seed_waste_land",
+            "Fragment and Allusion",
+            "- Allusion does not simply restore tradition; it exposes tradition as damaged, partial, and overdetermined\n- Fragmentation is both historical symptom and compositional method\n- The notes stage scholarship as part of the poem's unstable apparatus",
+            2,
+        ),
+        (
+            "seed_waste_ritual",
+            "seed_waste_land",
+            "Ritual and Anthropology",
+            "The poem borrows ritual frameworks from comparative anthropology, but the result is not a stable key. Treat Frazer and Weston as part of the poem's method of anxious pattern-making.",
+            3,
+        ),
+        (
+            "seed_waste_voices",
+            "seed_waste_land",
+            "Urban Voices",
+            "The city appears as a pressure chamber of overheard voices, exhausted desire, commodity culture, and broken forms of address.",
+            4,
         ),
     ];
 
@@ -1103,25 +1263,65 @@ fn seed_if_empty(connection: &Connection) -> Result<(), String> {
 
     let relations = [
         (
-            "seed_rel_clip_contrastive",
-            "seed_clip",
-            "seed_contrastive_learning",
-            "uses",
+            "seed_rel_hamlet_negative_capability",
+            "seed_hamlet",
+            "seed_negative_capability",
+            "anticipates",
         ),
         (
-            "seed_rel_clip_zero_shot",
-            "seed_clip",
-            "seed_zero_shot",
-            "enables",
+            "seed_rel_hamlet_elegy",
+            "seed_hamlet",
+            "seed_elegy",
+            "disturbs",
         ),
         (
-            "seed_rel_zero_downstream",
-            "seed_zero_shot",
-            "seed_downstream_task",
-            "evaluated on",
+            "seed_rel_paradise_pastoral",
+            "seed_paradise_lost",
+            "seed_pastoral",
+            "reworks",
         ),
-        ("seed_rel_hamlet_death", "seed_hamlet", "seed_death", "explores"),
-        ("seed_rel_hamlet_motif", "seed_hamlet", "seed_motif", "contains"),
+        (
+            "seed_rel_paradise_elegy",
+            "seed_paradise_lost",
+            "seed_elegy",
+            "contains",
+        ),
+        (
+            "seed_rel_waste_allusion",
+            "seed_waste_land",
+            "seed_allusion",
+            "depends on",
+        ),
+        (
+            "seed_rel_waste_elegy",
+            "seed_waste_land",
+            "seed_elegy",
+            "modernizes",
+        ),
+        (
+            "seed_rel_waste_pastoral",
+            "seed_waste_land",
+            "seed_pastoral",
+            "ironizes",
+        ),
+        (
+            "seed_rel_ekphrasis_allusion",
+            "seed_ekphrasis",
+            "seed_allusion",
+            "overlaps with",
+        ),
+        (
+            "seed_rel_free_indirect_negative",
+            "seed_free_indirect_discourse",
+            "seed_negative_capability",
+            "creates space for",
+        ),
+        (
+            "seed_rel_metaphysical_ekphrasis",
+            "seed_metaphysical_conceit",
+            "seed_ekphrasis",
+            "contrasts with",
+        ),
     ];
 
     for (id, from_entry_id, to_entry_id, relation_type) in relations {
@@ -1140,22 +1340,34 @@ fn seed_if_empty(connection: &Connection) -> Result<(), String> {
 
     let gaps = [
         (
-            "seed_gap_temperature",
-            "seed_clip",
-            "Temperature scaling in CLIP",
-            "Clarify how the learned temperature parameter affects contrastive logits and retrieval confidence.",
+            "seed_gap_ophelia",
+            "seed_hamlet",
+            "Ophelia and lyric interruption",
+            "Separate Ophelia's songs as dramatic symptom, courtly archive, and gendered counter-memory.",
         ),
         (
-            "seed_gap_prompting",
-            "seed_clip",
-            "Prompt engineering for CLIP",
-            "Collect examples of prompt templates that materially change zero-shot classification performance.",
+            "seed_gap_milton_matter",
+            "seed_paradise_lost",
+            "Miltonic matter and monism",
+            "Clarify how debates about spirit, matter, and monism affect readings of embodiment in Paradise Lost.",
         ),
         (
-            "seed_gap_donne",
-            "seed_death",
-            "Theological death in Donne",
-            "Separate doctrine, rhetoric, and intimacy in metaphysical poetry notes.",
+            "seed_gap_waste_ritual",
+            "seed_waste_land",
+            "Frazer, Weston, and ritual method",
+            "Track when ritual anthropology functions as explanatory key, parody, or scholarly noise.",
+        ),
+        (
+            "seed_gap_austen_woolf",
+            "seed_free_indirect_discourse",
+            "Austen to Woolf transition",
+            "Map how free indirect discourse shifts from social irony toward interior duration and modernist perception.",
+        ),
+        (
+            "seed_gap_antipastoral",
+            "seed_pastoral",
+            "Anti-pastoral after enclosure",
+            "Collect examples where rural retreat exposes labor, dispossession, or ecological damage rather than harmony.",
         ),
     ];
 
@@ -1180,24 +1392,54 @@ fn seed_if_empty(connection: &Connection) -> Result<(), String> {
 fn seed_trails(connection: &Connection, now: &str) -> Result<(), String> {
     let trails = [
         (
-            "seed_trail_vlm",
-            "Vision-Language Models Basics",
-            "A short route from representation learning into CLIP-style zero-shot use.",
+            "seed_trail_tragedy_knowledge",
+            "Early Modern Tragedy and Knowledge",
+            "A route through uncertainty, theatrical evidence, and figures of unresolved thought.",
             vec![
-                ("seed_contrastive_learning", "Start with the training idea."),
-                ("seed_clip", "Move into the shared image-text model."),
-                ("seed_zero_shot", "Then inspect the common use case."),
-                ("seed_downstream_task", "End with evaluation and transfer."),
+                (
+                    "seed_hamlet",
+                    "Begin with drama as an engine of uncertain evidence.",
+                ),
+                (
+                    "seed_metaphysical_conceit",
+                    "Move to difficult figuration as argumentative pressure.",
+                ),
+                (
+                    "seed_negative_capability",
+                    "End with a poetics of remaining inside uncertainty.",
+                ),
             ],
         ),
         (
-            "seed_trail_death_lit",
-            "Death in English Literature",
-            "A compact route from a theme into one dramatic example.",
+            "seed_trail_form_history",
+            "Form, Loss, and Historical Pressure",
+            "A route from elegiac form into epic fallenness and modernist fragmentation.",
             vec![
-                ("seed_death", "Theme-level anchor."),
-                ("seed_hamlet", "Read the theme through a play."),
-                ("seed_motif", "Track how repeated devices carry it."),
+                ("seed_elegy", "Start with loss as genre and ritual problem."),
+                (
+                    "seed_paradise_lost",
+                    "Scale loss into epic fallenness and theological history.",
+                ),
+                (
+                    "seed_waste_land",
+                    "Watch modernism inherit epic and elegy as fragments.",
+                ),
+            ],
+        ),
+        (
+            "seed_trail_mediation",
+            "Modes of Mediation",
+            "A compact path through image, reference, narration, and interpretive distance.",
+            vec![
+                ("seed_ekphrasis", "Start with word-image mediation."),
+                (
+                    "seed_allusion",
+                    "Move to reference as compressed historical relation.",
+                ),
+                (
+                    "seed_free_indirect_discourse",
+                    "End with narration as mediated consciousness.",
+                ),
             ],
         ),
     ];

@@ -60,91 +60,130 @@ const seedData = (): AppData => {
   const data: AppData = {
     entries: [
       {
-        id: "seed_clip",
-        title: "CLIP",
-        entryType: "book",
-        content:
-          "A personal mini-book for understanding Contrastive Language-Image Pre-training and its place in representation learning.",
-        category: "Machine Learning",
-        tags: ["model", "paper", "vision-language"],
-        timelineDate: "2021",
-        timelineNote: "Introduced as a major vision-language representation model.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_downstream_task",
-        title: "Downstream Task",
-        entryType: "entry",
-        content:
-          "A task that uses representations, checkpoints, or learned features from a prior training process.\n\nExamples include classification, retrieval, detection, ranking, or evaluation tasks built on top of a pretrained model.",
-        category: "Machine Learning",
-        tags: ["evaluation", "transfer-learning"],
-        timelineDate: "",
-        timelineNote: "",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_contrastive_learning",
-        title: "Contrastive Learning",
-        entryType: "entry",
-        content:
-          "A learning setup that pulls related examples closer in representation space while pushing unrelated examples apart.\n\nUseful mental handle: it teaches a model to organize similarity rather than memorize labels.",
-        category: "Machine Learning",
-        tags: ["representation-learning"],
-        timelineDate: "modern ML",
-        timelineNote: "A recurring organizing method for representation learning.",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_zero_shot",
-        title: "Zero-Shot Classification",
-        entryType: "entry",
-        content:
-          "Classification without task-specific labeled examples for the target labels.\n\nIn CLIP-style workflows, labels can be expressed as text prompts and compared with image representations.",
-        category: "Machine Learning",
-        tags: ["evaluation", "classification"],
-        timelineDate: "",
-        timelineNote: "",
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
         id: "seed_hamlet",
         title: "Hamlet",
         entryType: "book",
         content:
-          "A nested literary atlas for tracking motifs, death, hesitation, theatricality, and decay.",
-        category: "English Literature",
-        tags: ["play", "tragedy", "Shakespeare"],
+          "A nested atlas for reading Hamlet through sovereignty, theatrical knowledge, mourning, succession, and forms of delay.",
+        category: "Early Modern Drama",
+        tags: ["Shakespeare", "tragedy", "revenge tragedy", "epistemology"],
         timelineDate: "1600",
-        timelineNote: "Approximate composition period.",
+        timelineNote: "Approximate composition period; useful for locating the play near succession anxiety and late Elizabethan theatrical culture.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
       {
-        id: "seed_death",
-        title: "Death",
-        entryType: "entry",
+        id: "seed_paradise_lost",
+        title: "Paradise Lost",
+        entryType: "book",
         content:
-          "A flexible theme entry for tracking death as theology, bodily decline, political inheritance, and dramatic atmosphere.",
-        category: "English Literature",
-        tags: ["theme", "literature"],
-        timelineDate: "recurring theme",
-        timelineNote: "Useful across periods rather than a single dated event.",
+          "A Miltonic mini-book for epic form, obedience, liberty, fallenness, republican memory, and the pressure of theology on poetic syntax.",
+        category: "Restoration Epic",
+        tags: ["Milton", "epic", "blank verse", "theology", "republicanism"],
+        timelineDate: "1667",
+        timelineNote: "First published in ten books in 1667; revised into twelve books in 1674.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
       {
-        id: "seed_motif",
-        title: "Motif",
+        id: "seed_waste_land",
+        title: "The Waste Land",
+        entryType: "book",
+        content:
+          "A modernist mini-book for allusion, fragmentation, ritual method, urban voices, and the problem of cultural inheritance after catastrophe.",
+        category: "Modernist Poetry",
+        tags: ["Eliot", "modernism", "allusion", "fragment", "ritual"],
+        timelineDate: "1922",
+        timelineNote: "Published in the high modernist annus mirabilis alongside Ulysses and Jacob's Room.",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_negative_capability",
+        title: "Negative Capability",
         entryType: "entry",
         content:
-          "A recurring image, structure, phrase, or object that gathers meaning across a work or corpus.",
-        category: "Literary Method",
-        tags: ["method", "analysis"],
+          "Keats's name for the poet's capacity to remain with uncertainty, mystery, and unresolved contradiction without converting them too quickly into doctrine.\n\nIn PhD-level use, treat it less as a slogan for vagueness and more as a theory of suspended epistemic mastery.",
+        category: "Romantic Poetics",
+        tags: ["Keats", "Romanticism", "poetics", "uncertainty"],
+        timelineDate: "1817",
+        timelineNote: "Formulated in Keats's December 1817 letter to George and Thomas Keats.",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_elegy",
+        title: "Elegy",
+        entryType: "entry",
+        content:
+          "A mode of writing organized by loss, consolation, memorial address, and the instability of surviving speech.\n\nUseful axis: public commemoration versus private grief; ritual closure versus melancholic repetition.",
+        category: "Genre and Form",
+        tags: ["genre", "mourning", "lyric", "death"],
+        timelineDate: "classical to modern",
+        timelineNote: "A durable form that shifts from classical lament to modern meditations on historical rupture.",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_ekphrasis",
+        title: "Ekphrasis",
+        entryType: "entry",
+        content:
+          "The verbal representation of visual art or visual experience, often staging rivalry between media, spectatorship, and interpretation.\n\nTrack who controls the gaze, what the described object withholds, and whether description becomes possession.",
+        category: "Rhetoric and Media",
+        tags: ["rhetoric", "visuality", "aesthetics", "media"],
+        timelineDate: "ancient rhetoric",
+        timelineNote: "A classical rhetorical term that becomes central to modern theories of word-image relations.",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_pastoral",
+        title: "Pastoral",
+        entryType: "entry",
+        content:
+          "A mode that imagines rural retreat in order to think about labor, artifice, class, enclosure, ecology, and political disappointment.\n\nDo not reduce pastoral to scenery; its force often lies in the friction between idealized withdrawal and material history.",
+        category: "Genre and Mode",
+        tags: ["genre", "ecology", "class", "landscape"],
+        timelineDate: "classical to modern",
+        timelineNote: "From Theocritus and Virgil through Renaissance eclogue, Romantic retreat, and modern anti-pastoral.",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_free_indirect_discourse",
+        title: "Free Indirect Discourse",
+        entryType: "entry",
+        content:
+          "A narrative technique in which third-person narration absorbs a character's idiom, judgments, or perceptual field without direct quotation.\n\nIt is especially useful for tracking irony, social cognition, and the unstable boundary between narrator and character.",
+        category: "Narratology",
+        tags: ["novel", "narration", "Austen", "irony"],
+        timelineDate: "19th century",
+        timelineNote: "Frequently associated with Austen and later realist or modernist fiction.",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_metaphysical_conceit",
+        title: "Metaphysical Conceit",
+        entryType: "entry",
+        content:
+          "An intellectually strenuous figure that joins remote fields of experience into a single argumentative image.\n\nIn Donne and later criticism, the conceit is not ornamental excess but a pressure point where theology, erotic address, and logical wit meet.",
+        category: "Early Modern Poetry",
+        tags: ["Donne", "metaphysical poetry", "rhetoric", "wit"],
+        timelineDate: "17th century",
+        timelineNote: "A retrospective critical category shaped by eighteenth-century and modern accounts of metaphysical poetry.",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_allusion",
+        title: "Allusion",
+        entryType: "entry",
+        content:
+          "A compressed reference that activates another text, tradition, myth, event, or interpretive frame without fully absorbing it.\n\nAt doctoral level, ask what allusion authorizes, excludes, misremembers, or makes newly available under historical pressure.",
+        category: "Intertextuality",
+        tags: ["method", "intertextuality", "modernism", "classics"],
         timelineDate: "",
         timelineNote: "",
         createdAt: timestamp,
@@ -153,125 +192,293 @@ const seedData = (): AppData => {
     ],
     bookPages: [
       {
-        id: "seed_clip_overview",
-        entryId: "seed_clip",
+        id: "seed_hamlet_overview",
+        entryId: "seed_hamlet",
         title: "Overview",
         content:
-          "CLIP learns a shared image-text space.\n\n- Images and captions are embedded near each other\n- Similarity supports retrieval and classification\n- The model is often used without training a task-specific classifier",
+          "Hamlet is useful as a research atlas because nearly every local problem opens into a larger scholarly route:\n\n- Succession and sovereignty\n- Mourning and theatricality\n- Revenge tragedy and legal delay\n- Surveillance, inwardness, and uncertain knowledge",
         pageOrder: 1,
         createdAt: timestamp,
         updatedAt: timestamp,
       },
       {
-        id: "seed_clip_core",
-        entryId: "seed_clip",
-        title: "Core Idea",
+        id: "seed_hamlet_sovereignty",
+        entryId: "seed_hamlet",
+        title: "Sovereignty and Surveillance",
         content:
-          "Instead of predicting a fixed class label, CLIP compares image representations with text representations.\n\n- Positive pairs are matched image-caption examples\n- Negative pairs are other examples in the batch\n- The objective rewards correct alignment across modalities",
+          "The court is not only a setting but an information system.\n\n- Claudius governs through watching, testing, and managed spectacle\n- Hamlet's delay is partly a crisis of evidence\n- Political legitimacy becomes inseparable from performance",
         pageOrder: 2,
         createdAt: timestamp,
         updatedAt: timestamp,
       },
       {
-        id: "seed_clip_confusions",
-        entryId: "seed_clip",
-        title: "Common Confusions",
-        content:
-          "- CLIP is not only an image classifier\n- Zero-shot performance depends heavily on prompts and label wording\n- Contrastive training is the training setup, not the final use case",
-        pageOrder: 3,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_clip_notes",
-        entryId: "seed_clip",
-        title: "My Notes",
-        content:
-          "Questions to revisit:\n\n- How temperature changes embedding separation\n- How prompt templates shift class scores\n- Where CLIP fails on fine-grained categories",
-        pageOrder: 4,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      },
-      {
-        id: "seed_hamlet_overview",
+        id: "seed_hamlet_theatre",
         entryId: "seed_hamlet",
-        title: "Overview",
+        title: "Theatre and Epistemology",
         content:
-          "Hamlet can be read as an atlas of decay, delay, inheritance, theatre, death, and unstable knowledge.",
-        pageOrder: 1,
+          "The play repeatedly asks whether performance reveals truth or merely produces another surface.\n\n- The Mousetrap converts theatre into experiment\n- Feigned madness makes sincerity unreadable\n- Soliloquy becomes both disclosure and staged self-scrutiny",
+        pageOrder: 3,
         createdAt: timestamp,
         updatedAt: timestamp,
       },
       {
         id: "seed_hamlet_motifs",
         entryId: "seed_hamlet",
-        title: "Motifs",
+        title: "Motifs to Track",
         content:
-          "- Decay and corruption\n- Ghostly inheritance\n- Performed madness\n- The skull as compressed mortality",
+          "- Rot, rankness, and bodily corruption\n- Ears, poison, and the vulnerability of reception\n- Books, tablets, and memory as inscription\n- Skulls and theatrical objects as condensed mortality",
+        pageOrder: 4,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_paradise_overview",
+        entryId: "seed_paradise_lost",
+        title: "Overview",
+        content:
+          "Paradise Lost turns epic scale into a problem of interpretation: how can a fallen reader judge obedience, liberty, heroism, and eloquence after the Fall?",
+        pageOrder: 1,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_paradise_argument",
+        entryId: "seed_paradise_lost",
+        title: "Epic Argument",
+        content:
+          "- Begins in medias res but frames cosmic history as moral argument\n- Reworks classical epic machinery through Christian theology\n- Makes heroic energy suspect when it appears as Satanic charisma",
         pageOrder: 2,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_paradise_satanic_rhetoric",
+        entryId: "seed_paradise_lost",
+        title: "Satanic Rhetoric",
+        content:
+          "Satan's speeches are powerful because they convert injury into political theatre.\n\nResearch note: track where republican vocabulary becomes demonic self-authorization rather than simple Miltonic endorsement.",
+        pageOrder: 3,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_paradise_blank_verse",
+        entryId: "seed_paradise_lost",
+        title: "Blank Verse Notes",
+        content:
+          "Milton's syntax delays closure, stretches causality, and asks the reader to hold theological and grammatical suspense across long verse paragraphs.",
+        pageOrder: 4,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_waste_overview",
+        entryId: "seed_waste_land",
+        title: "Overview",
+        content:
+          "The Waste Land can be mapped as a poem of broken mediation: fragments of ritual, quotation, urban speech, prophecy, song, and scholarly annotation compete for authority.",
+        pageOrder: 1,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_waste_fragment",
+        entryId: "seed_waste_land",
+        title: "Fragment and Allusion",
+        content:
+          "- Allusion does not simply restore tradition; it exposes tradition as damaged, partial, and overdetermined\n- Fragmentation is both historical symptom and compositional method\n- The notes stage scholarship as part of the poem's unstable apparatus",
+        pageOrder: 2,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_waste_ritual",
+        entryId: "seed_waste_land",
+        title: "Ritual and Anthropology",
+        content:
+          "The poem borrows ritual frameworks from comparative anthropology, but the result is not a stable key. Treat Frazer and Weston as part of the poem's method of anxious pattern-making.",
+        pageOrder: 3,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_waste_voices",
+        entryId: "seed_waste_land",
+        title: "Urban Voices",
+        content:
+          "The city appears as a pressure chamber of overheard voices, exhausted desire, commodity culture, and broken forms of address.",
+        pageOrder: 4,
         createdAt: timestamp,
         updatedAt: timestamp,
       },
     ],
     contentBlocks: [],
     relations: [
-      makeRelation("seed_rel_clip_contrastive", "seed_clip", "seed_contrastive_learning", "uses", timestamp),
-      makeRelation("seed_rel_clip_zero_shot", "seed_clip", "seed_zero_shot", "enables", timestamp),
-      makeRelation("seed_rel_zero_downstream", "seed_zero_shot", "seed_downstream_task", "evaluated on", timestamp),
-      makeRelation("seed_rel_hamlet_death", "seed_hamlet", "seed_death", "explores", timestamp),
-      makeRelation("seed_rel_hamlet_motif", "seed_hamlet", "seed_motif", "contains", timestamp),
+      makeRelation("seed_rel_hamlet_negative_capability", "seed_hamlet", "seed_negative_capability", "anticipates", timestamp),
+      makeRelation("seed_rel_hamlet_elegy", "seed_hamlet", "seed_elegy", "disturbs", timestamp),
+      makeRelation("seed_rel_paradise_pastoral", "seed_paradise_lost", "seed_pastoral", "reworks", timestamp),
+      makeRelation("seed_rel_paradise_elegy", "seed_paradise_lost", "seed_elegy", "contains", timestamp),
+      makeRelation("seed_rel_waste_allusion", "seed_waste_land", "seed_allusion", "depends on", timestamp),
+      makeRelation("seed_rel_waste_elegy", "seed_waste_land", "seed_elegy", "modernizes", timestamp),
+      makeRelation("seed_rel_waste_pastoral", "seed_waste_land", "seed_pastoral", "ironizes", timestamp),
+      makeRelation("seed_rel_ekphrasis_allusion", "seed_ekphrasis", "seed_allusion", "overlaps with", timestamp),
+      makeRelation("seed_rel_free_indirect_negative", "seed_free_indirect_discourse", "seed_negative_capability", "creates space for", timestamp),
+      makeRelation("seed_rel_metaphysical_ekphrasis", "seed_metaphysical_conceit", "seed_ekphrasis", "contrasts with", timestamp),
     ],
     knowledgeGaps: [
       makeGap(
-        "seed_gap_temperature",
-        "seed_clip",
-        "Temperature scaling in CLIP",
-        "Clarify how the learned temperature parameter affects contrastive logits and retrieval confidence.",
+        "seed_gap_ophelia",
+        "seed_hamlet",
+        "Ophelia and lyric interruption",
+        "Separate Ophelia's songs as dramatic symptom, courtly archive, and gendered counter-memory.",
         timestamp,
       ),
       makeGap(
-        "seed_gap_prompting",
-        "seed_clip",
-        "Prompt engineering for CLIP",
-        "Collect examples of prompt templates that materially change zero-shot classification performance.",
+        "seed_gap_milton_matter",
+        "seed_paradise_lost",
+        "Miltonic matter and monism",
+        "Clarify how debates about spirit, matter, and monism affect readings of embodiment in Paradise Lost.",
         timestamp,
       ),
       makeGap(
-        "seed_gap_donne",
-        "seed_death",
-        "Theological death in Donne",
-        "Separate doctrine, rhetoric, and intimacy in metaphysical poetry notes.",
+        "seed_gap_waste_ritual",
+        "seed_waste_land",
+        "Frazer, Weston, and ritual method",
+        "Track when ritual anthropology functions as explanatory key, parody, or scholarly noise.",
+        timestamp,
+      ),
+      makeGap(
+        "seed_gap_austen_woolf",
+        "seed_free_indirect_discourse",
+        "Austen to Woolf transition",
+        "Map how free indirect discourse shifts from social irony toward interior duration and modernist perception.",
+        timestamp,
+      ),
+      makeGap(
+        "seed_gap_antipastoral",
+        "seed_pastoral",
+        "Anti-pastoral after enclosure",
+        "Collect examples where rural retreat exposes labor, dispossession, or ecological damage rather than harmony.",
         timestamp,
       ),
     ],
     trails: [
       {
-        id: "seed_trail_vlm",
-        title: "Vision-Language Models Basics",
-        description: "A short route from representation learning into CLIP-style zero-shot use.",
+        id: "seed_trail_tragedy_knowledge",
+        title: "Early Modern Tragedy and Knowledge",
+        description: "A route through uncertainty, theatrical evidence, and figures of unresolved thought.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
       {
-        id: "seed_trail_death_lit",
-        title: "Death in English Literature",
-        description: "A compact route from a theme into one dramatic example.",
+        id: "seed_trail_form_history",
+        title: "Form, Loss, and Historical Pressure",
+        description: "A route from elegiac form into epic fallenness and modernist fragmentation.",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      {
+        id: "seed_trail_mediation",
+        title: "Modes of Mediation",
+        description: "A compact path through image, reference, narration, and interpretive distance.",
         createdAt: timestamp,
         updatedAt: timestamp,
       },
     ],
     trailItems: [
-      makeTrailItem("seed_trail_vlm_item_0", "seed_trail_vlm", "seed_contrastive_learning", 1, "Start with the training idea.", timestamp),
-      makeTrailItem("seed_trail_vlm_item_1", "seed_trail_vlm", "seed_clip", 2, "Move into the shared image-text model.", timestamp),
-      makeTrailItem("seed_trail_vlm_item_2", "seed_trail_vlm", "seed_zero_shot", 3, "Then inspect the common use case.", timestamp),
-      makeTrailItem("seed_trail_vlm_item_3", "seed_trail_vlm", "seed_downstream_task", 4, "End with evaluation and transfer.", timestamp),
-      makeTrailItem("seed_trail_death_lit_item_0", "seed_trail_death_lit", "seed_death", 1, "Theme-level anchor.", timestamp),
-      makeTrailItem("seed_trail_death_lit_item_1", "seed_trail_death_lit", "seed_hamlet", 2, "Read the theme through a play.", timestamp),
-      makeTrailItem("seed_trail_death_lit_item_2", "seed_trail_death_lit", "seed_motif", 3, "Track how repeated devices carry it.", timestamp),
+      makeTrailItem("seed_trail_tragedy_knowledge_item_0", "seed_trail_tragedy_knowledge", "seed_hamlet", 1, "Begin with drama as an engine of uncertain evidence.", timestamp),
+      makeTrailItem("seed_trail_tragedy_knowledge_item_1", "seed_trail_tragedy_knowledge", "seed_metaphysical_conceit", 2, "Move to difficult figuration as argumentative pressure.", timestamp),
+      makeTrailItem("seed_trail_tragedy_knowledge_item_2", "seed_trail_tragedy_knowledge", "seed_negative_capability", 3, "End with a poetics of remaining inside uncertainty.", timestamp),
+      makeTrailItem("seed_trail_form_history_item_0", "seed_trail_form_history", "seed_elegy", 1, "Start with loss as genre and ritual problem.", timestamp),
+      makeTrailItem("seed_trail_form_history_item_1", "seed_trail_form_history", "seed_paradise_lost", 2, "Scale loss into epic fallenness and theological history.", timestamp),
+      makeTrailItem("seed_trail_form_history_item_2", "seed_trail_form_history", "seed_waste_land", 3, "Watch modernism inherit epic and elegy as fragments.", timestamp),
+      makeTrailItem("seed_trail_mediation_item_0", "seed_trail_mediation", "seed_ekphrasis", 1, "Start with word-image mediation.", timestamp),
+      makeTrailItem("seed_trail_mediation_item_1", "seed_trail_mediation", "seed_allusion", 2, "Move to reference as compressed historical relation.", timestamp),
+      makeTrailItem("seed_trail_mediation_item_2", "seed_trail_mediation", "seed_free_indirect_discourse", 3, "End with narration as mediated consciousness.", timestamp),
     ],
   };
 
   return normalizeData(data);
+};
+
+const legacySeedEntryIds = new Set([
+  "seed_clip",
+  "seed_downstream_task",
+  "seed_contrastive_learning",
+  "seed_zero_shot",
+  "seed_hamlet",
+  "seed_death",
+  "seed_motif",
+]);
+
+const legacySeedPageIds = new Set([
+  "seed_clip_overview",
+  "seed_clip_core",
+  "seed_clip_confusions",
+  "seed_clip_notes",
+  "seed_hamlet_overview",
+  "seed_hamlet_motifs",
+]);
+
+const legacySeedTrailIds = new Set(["seed_trail_vlm", "seed_trail_death_lit"]);
+
+const shouldReplaceLegacySeed = (data: AppData) =>
+  data.entries.some((entry) => entry.id === "seed_clip") &&
+  !data.entries.some((entry) => entry.id === "seed_waste_land");
+
+const replaceLegacySeedData = (data: AppData): AppData => {
+  if (!shouldReplaceLegacySeed(data)) {
+    return data;
+  }
+
+  const literatureSeed = seedData();
+  const legacyPageIds = new Set([
+    ...legacySeedPageIds,
+    ...data.bookPages
+      .filter((page) => legacySeedEntryIds.has(page.entryId))
+      .map((page) => page.id),
+  ]);
+
+  return normalizeData({
+    entries: [
+      ...data.entries.filter((entry) => !legacySeedEntryIds.has(entry.id)),
+      ...literatureSeed.entries,
+    ],
+    bookPages: [
+      ...data.bookPages.filter(
+        (page) => !legacySeedEntryIds.has(page.entryId) && !legacyPageIds.has(page.id),
+      ),
+      ...literatureSeed.bookPages,
+    ],
+    contentBlocks: [
+      ...data.contentBlocks.filter(
+        (block) =>
+          !(block.ownerType === "entry" && legacySeedEntryIds.has(block.ownerId)) &&
+          !(block.ownerType === "book_page" && legacyPageIds.has(block.ownerId)),
+      ),
+      ...literatureSeed.contentBlocks,
+    ],
+    relations: [
+      ...data.relations.filter(
+        (relation) =>
+          !legacySeedEntryIds.has(relation.fromEntryId) &&
+          !legacySeedEntryIds.has(relation.toEntryId),
+      ),
+      ...literatureSeed.relations,
+    ],
+    knowledgeGaps: [
+      ...data.knowledgeGaps.filter((gap) => !legacySeedEntryIds.has(gap.entryId)),
+      ...literatureSeed.knowledgeGaps,
+    ],
+    trails: [
+      ...data.trails.filter((trail) => !legacySeedTrailIds.has(trail.id)),
+      ...literatureSeed.trails,
+    ],
+    trailItems: [
+      ...data.trailItems.filter((item) => !legacySeedTrailIds.has(item.trailId)),
+      ...literatureSeed.trailItems,
+    ],
+  });
 };
 
 const isTauriRuntime = () =>
@@ -673,7 +880,7 @@ class DemoLexiconRepository implements LexiconRepository {
       return seeded;
     }
 
-    const normalized = normalizeData(JSON.parse(raw) as Partial<AppData>);
+    const normalized = replaceLegacySeedData(normalizeData(JSON.parse(raw) as Partial<AppData>));
     this.write(normalized);
     return normalized;
   }

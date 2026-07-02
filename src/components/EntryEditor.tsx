@@ -88,7 +88,7 @@ export function EntryEditor({ entry, blocks, onSave, onCancel }: EntryEditorProp
           <input
             value={timelineDate}
             onChange={(event) => setTimelineDate(event.target.value)}
-            placeholder="2021, 1600, modern ML"
+            placeholder="1600, 1667, 19th century"
           />
         </label>
 

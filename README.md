@@ -52,6 +52,19 @@ npm run tauri:build
 
 Build artifacts are emitted by Tauri under `src-tauri/target/release/bundle`.
 
+## Building Windows Installer With GitHub Actions
+
+1. Push this repository, including `.github/workflows/build-windows.yml`, to GitHub.
+2. Open the repository on GitHub and go to `Actions`.
+3. Select `Build Windows App`.
+4. Click `Run workflow`.
+5. Wait for the Windows build to finish.
+6. Download the artifact named `lexicon-os-windows`.
+7. Extract the downloaded zip.
+8. Run the generated `.exe` or `.msi` installer.
+
+Because this early build is unsigned, Windows SmartScreen may show a warning during testing.
+
 ## Concept
 
 Lexicon OS treats a personal knowledge base as an atlas book:

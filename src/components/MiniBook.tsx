@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Edit3, FilePlus2, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit3, FilePlus2, Save, Sparkles, Trash2 } from "lucide-react";
 import type { BookPage, BookPageInput, ContentBlock, ContentBlockInput, Entry } from "../types";
 import { BlockEditor } from "./BlockEditor";
 import { BlockRenderer } from "./BlockRenderer";
-import { blocksToInputs, ownerBlocks, projectBlocksToContent } from "../utils/blocks";
+import { AIDraftPanel } from "./AIDraftPanel";
+import { appendBlockInputs, blocksToInputs, contentFromBlocks, ownerBlocks, projectBlocksToContent } from "../utils/blocks";
+import { getConfiguredAIProvider, getAISettingsForAction } from "../services/ai/aiProvider";
+import { summarizePrompt, summarizeSystemPrompt } from "../services/ai/prompts";
+import { cleanModelText } from "../services/ai/parsing";
 
 interface MiniBookProps {
   entry: Entry;
@@ -52,7 +56,7 @@ export function MiniBook({
   };
 
   return (
-    <section className="book-surface mini-book" aria-label={`${entry.title} mini-book`}>
+    <section className="book-surface mini-book" aria-label={entry.title + " mini-book"}>
       <div className="mini-book-topline">
         <button className="button button--subtle" type="button" onClick={onBack}>
           <ArrowLeft size={17} />
@@ -135,12 +139,52 @@ function MiniBookPage({ page, blocks, isEditing, onEdit, onCancel, onSave, onDel
   const [draftBlocks, setDraftBlocks] = useState<ContentBlockInput[]>(() =>
     blocksToInputs(blocks, page.content),
   );
+  const [summaryDraft, setSummaryDraft] = useState("");
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setTitle(page.title);
     setDraftBlocks(blocksToInputs(blocks, page.content));
+    setSummaryDraft("");
+    setSummaryError(null);
   }, [page, blocks]);
+
+  const runSummarize = async () => {
+    setSummaryDraft("");
+    setSummaryError(null);
+    setIsSummarizing(true);
+    try {
+      const settings = getAISettingsForAction();
+      const result = await getConfiguredAIProvider().generateText({
+        systemPrompt: summarizeSystemPrompt,
+        userPrompt: summarizePrompt({ title: page.title, content: contentFromBlocks(blocks, page.content) }),
+        model: settings.modelName,
+        temperature: settings.temperature,
+      });
+      setSummaryDraft(cleanModelText(result.text));
+    } catch (error) {
+      setSummaryError(errorMessage(error));
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
+  const insertSummary = async () => {
+    const existing = blocksToInputs(blocks, page.content);
+    const nextBlocks = appendBlockInputs(existing, [
+      { blockType: "callout", content: summaryDraft, metadata: '{ "variant": "summary" }', blockOrder: existing.length + 1 },
+    ]);
+    await onSave({
+      entryId: page.entryId,
+      title: page.title,
+      content: projectBlocksToContent(nextBlocks),
+      pageOrder: page.pageOrder,
+    }, nextBlocks);
+    setSummaryDraft("");
+    setSummaryError(null);
+  };
 
   if (isEditing) {
     return (
@@ -188,6 +232,9 @@ function MiniBookPage({ page, blocks, isEditing, onEdit, onCancel, onSave, onDel
           <h1>{page.title}</h1>
         </div>
         <div className="icon-actions">
+          <button className="icon-button" type="button" onClick={runSummarize} title="Summarize">
+            <Sparkles size={17} />
+          </button>
           <button className="icon-button" type="button" onClick={onEdit} title="Edit page">
             <Edit3 size={17} />
           </button>
@@ -196,7 +243,36 @@ function MiniBookPage({ page, blocks, isEditing, onEdit, onCancel, onSave, onDel
           </button>
         </div>
       </div>
+      <div className="entry-toolbar-actions">
+        <button className="button button--subtle" type="button" onClick={runSummarize} disabled={isSummarizing}>
+          <Sparkles size={16} />
+          {isSummarizing ? "Summarizing..." : "Summarize"}
+        </button>
+      </div>
+      <AIDraftPanel
+        title="Summary draft"
+        text={summaryDraft}
+        error={summaryError}
+        isLoading={isSummarizing}
+        primaryActionLabel="Insert as Callout"
+        onPrimaryAction={insertSummary}
+        onRetry={runSummarize}
+        onDiscard={() => {
+          setSummaryDraft("");
+          setSummaryError(null);
+        }}
+      />
       <BlockRenderer blocks={blocks} legacyContent={page.content} />
     </article>
   );
+}
+
+function errorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "Something went wrong.";
 }

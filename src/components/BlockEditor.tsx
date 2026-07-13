@@ -1,14 +1,33 @@
-import { Copy, Plus, Trash2, ArrowDown, ArrowUp } from "lucide-react";
+import { useState } from "react";
+import { Copy, Plus, Trash2, ArrowDown, ArrowUp, Wand2 } from "lucide-react";
 import type { BlockType, ContentBlockInput } from "../types";
 import { blockTypeLabels, blockTypes, newBlockInput, normalizeBlockInputs } from "../utils/blocks";
+import { AIDraftPanel } from "./AIDraftPanel";
+import { getConfiguredAIProvider, getAISettingsForAction } from "../services/ai/aiProvider";
+import { rewritePrompt, rewriteSystemPrompt } from "../services/ai/prompts";
+import { cleanModelText } from "../services/ai/parsing";
 
 interface BlockEditorProps {
   blocks: ContentBlockInput[];
   onChange: (blocks: ContentBlockInput[]) => void;
 }
 
+type RewriteMode = "Make clearer" | "Make shorter" | "Make more formal" | "Explain more simply";
+
+const rewriteModes: RewriteMode[] = [
+  "Make clearer",
+  "Make shorter",
+  "Make more formal",
+  "Explain more simply",
+];
+
 export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
   const normalizedBlocks = normalizeBlockInputs(blocks);
+  const [rewriteMode, setRewriteMode] = useState<RewriteMode>("Make clearer");
+  const [rewriteIndex, setRewriteIndex] = useState<number | null>(null);
+  const [rewriteText, setRewriteText] = useState("");
+  const [rewriteError, setRewriteError] = useState<string | null>(null);
+  const [isRewriting, setIsRewriting] = useState(false);
 
   const updateBlock = (index: number, updates: Partial<ContentBlockInput>) => {
     onChange(
@@ -46,6 +65,35 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
     onChange([...normalizedBlocks, newBlockInput(normalizedBlocks.length + 1)]);
   };
 
+  const runRewrite = async (index: number) => {
+    const block = normalizedBlocks[index];
+    if (!block?.content.trim()) {
+      setRewriteIndex(index);
+      setRewriteText("");
+      setRewriteError("This block is empty.");
+      return;
+    }
+
+    setRewriteIndex(index);
+    setRewriteText("");
+    setRewriteError(null);
+    setIsRewriting(true);
+    try {
+      const settings = getAISettingsForAction();
+      const result = await getConfiguredAIProvider().generateText({
+        systemPrompt: rewriteSystemPrompt,
+        userPrompt: rewritePrompt({ content: block.content, mode: rewriteMode }),
+        model: settings.modelName,
+        temperature: settings.temperature,
+      });
+      setRewriteText(cleanModelText(result.text));
+    } catch (error) {
+      setRewriteError(errorMessage(error));
+    } finally {
+      setIsRewriting(false);
+    }
+  };
+
   return (
     <div className="block-editor">
       <div className="block-editor-heading">
@@ -57,7 +105,7 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
       </div>
 
       {normalizedBlocks.map((block, index) => (
-        <div className="block-editor-card" key={`${index}-${block.blockOrder}`}>
+        <div className="block-editor-card" key={String(index) + "-" + block.blockOrder}>
           <div className="block-editor-toolbar">
             <select
               value={block.blockType}
@@ -103,7 +151,43 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
               value={block.metadata}
               onChange={(event) => updateBlock(index, { metadata: event.target.value })}
               placeholder={metadataPlaceholder(block.blockType)}
-              aria-label={`${block.blockType} metadata JSON`}
+              aria-label={block.blockType + " metadata JSON"}
+            />
+          ) : null}
+
+          {block.blockType !== "divider" ? (
+            <div className="ai-rewrite-row">
+              <select value={rewriteMode} onChange={(event) => setRewriteMode(event.target.value as RewriteMode)}>
+                {rewriteModes.map((mode) => (
+                  <option value={mode} key={mode}>{mode}</option>
+                ))}
+              </select>
+              <button className="button button--subtle" type="button" onClick={() => runRewrite(index)} disabled={isRewriting && rewriteIndex === index}>
+                <Wand2 size={15} />
+                {isRewriting && rewriteIndex === index ? "Rewriting..." : "AI Rewrite"}
+              </button>
+            </div>
+          ) : null}
+
+          {rewriteIndex === index ? (
+            <AIDraftPanel
+              title="Rewrite draft"
+              text={rewriteText}
+              error={rewriteError}
+              isLoading={isRewriting}
+              primaryActionLabel="Replace Block"
+              onPrimaryAction={() => {
+                updateBlock(index, { content: rewriteText });
+                setRewriteIndex(null);
+                setRewriteText("");
+                setRewriteError(null);
+              }}
+              onRetry={() => runRewrite(index)}
+              onDiscard={() => {
+                setRewriteIndex(null);
+                setRewriteText("");
+                setRewriteError(null);
+              }}
             />
           ) : null}
         </div>
@@ -133,4 +217,14 @@ function metadataPlaceholder(type: BlockType) {
   if (type === "image") return '{ "src": "https://...", "caption": "Caption" }';
   if (type === "code") return '{ "language": "ts" }';
   return "{}";
+}
+
+function errorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "Something went wrong.";
 }

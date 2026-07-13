@@ -94,6 +94,61 @@ export function projectBlocksToContent(blocks: ContentBlockInput[]) {
     .join("\n\n");
 }
 
+
+export function markdownToBlockInputs(markdown: string): ContentBlockInput[] {
+  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+  const blocks: ContentBlockInput[] = [];
+  let buffer: string[] = [];
+
+  const flushBuffer = () => {
+    const content = buffer.join("\n").trim();
+    if (content) {
+      blocks.push({
+        blockType: "markdown",
+        content,
+        metadata: "{}",
+        blockOrder: blocks.length + 1,
+      });
+    }
+    buffer = [];
+  };
+
+  for (const line of lines) {
+    const heading = /^(#{1,3})\s+(.+)$/.exec(line.trim());
+    if (heading) {
+      flushBuffer();
+      blocks.push({
+        blockType: "heading",
+        content: heading[2].trim(),
+        metadata: "{}",
+        blockOrder: blocks.length + 1,
+      });
+      continue;
+    }
+    buffer.push(line);
+  }
+
+  flushBuffer();
+  return blocks.length ? normalizeBlockInputs(blocks) : [newBlockInput(1, "markdown")];
+}
+
+export function appendBlockInputs(existing: ContentBlockInput[], additions: ContentBlockInput[]) {
+  const normalizedExisting = normalizeBlockInputs(existing);
+  const hasOnlyEmptyStarter = normalizedExisting.length === 1 && !normalizedExisting[0].content.trim();
+  const base = hasOnlyEmptyStarter ? [] : normalizedExisting;
+  return normalizeBlockInputs([...base, ...additions]);
+}
+
+export function contentFromBlocks(blocks: ContentBlockInput[] | ContentBlock[], fallback = "") {
+  const text = [...blocks]
+    .sort((a, b) => a.blockOrder - b.blockOrder)
+    .filter((block) => block.blockType !== "divider")
+    .map((block) => block.content.trim())
+    .filter(Boolean)
+    .join("\n\n");
+  return text || fallback;
+}
+
 export function newBlockInput(blockOrder: number, blockType: BlockType = "text"): ContentBlockInput {
   return {
     blockType,

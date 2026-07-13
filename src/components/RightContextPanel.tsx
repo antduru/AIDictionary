@@ -1,19 +1,30 @@
-import { useMemo, useState } from "react";
-import { CheckCircle2, Link2, Plus, RotateCcw, Trash2, XCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Link2, Plus, RotateCcw, Sparkles, Trash2, XCircle } from "lucide-react";
 import type {
+  BookPage,
   Entry,
+  EntryInput,
   KnowledgeGap,
   KnowledgeGapInput,
+  ContentBlock,
   Relation,
   RelationInput,
 } from "../types";
-import { relationTypeSuggestions } from "../utils/blocks";
+import { contentFromBlocks, ownerBlocks, relationTypeSuggestions } from "../utils/blocks";
+import { getConfiguredAIProvider, getAISettingsForAction } from "../services/ai/aiProvider";
+import { entryCandidatePrompt, entryCandidateSystemPrompt, gapPrompt, gapSystemPrompt, relationPrompt, relationSystemPrompt } from "../services/ai/prompts";
+import { cleanModelText, parseJSONArray } from "../services/ai/parsing";
+import type { EntryCandidateSuggestion, KnowledgeGapSuggestion, RelationSuggestion } from "../services/ai/types";
 
 interface RightContextPanelProps {
   selectedEntry: Entry | null;
   entries: Entry[];
+  bookPages: BookPage[];
   relations: Relation[];
   knowledgeGaps: KnowledgeGap[];
+  contentBlocks: ContentBlock[];
+  autoRelationRequest: { entryId: string; nonce: number } | null;
+  onCreateEntryCandidate: (input: EntryInput, sourceEntryId: string, reason: string) => Promise<void>;
   onAddRelation: (input: RelationInput) => Promise<void>;
   onUpdateRelation: (relationId: string, input: RelationInput) => Promise<void>;
   onDeleteRelation: (relationId: string) => Promise<void>;
@@ -26,8 +37,12 @@ interface RightContextPanelProps {
 export function RightContextPanel({
   selectedEntry,
   entries,
+  bookPages,
   relations,
   knowledgeGaps,
+  contentBlocks,
+  autoRelationRequest,
+  onCreateEntryCandidate,
   onAddRelation,
   onUpdateRelation,
   onDeleteRelation,
@@ -41,8 +56,19 @@ export function RightContextPanel({
   const [relationNote, setRelationNote] = useState("");
   const [newGapTitle, setNewGapTitle] = useState("");
   const [newGapNote, setNewGapNote] = useState("");
+  const [relationSuggestions, setRelationSuggestions] = useState<RelationSuggestion[]>([]);
+  const [gapSuggestions, setGapSuggestions] = useState<KnowledgeGapSuggestion[]>([]);
+  const [entrySuggestions, setEntrySuggestions] = useState<EntryCandidateSuggestion[]>([]);
+  const [relationAIError, setRelationAIError] = useState<string | null>(null);
+  const [gapAIError, setGapAIError] = useState<string | null>(null);
+  const [entryAIError, setEntryAIError] = useState<string | null>(null);
+  const [isSuggestingRelations, setIsSuggestingRelations] = useState(false);
+  const [autoRelationMessage, setAutoRelationMessage] = useState("");
+  const [isSuggestingGaps, setIsSuggestingGaps] = useState(false);
+  const [isSuggestingEntries, setIsSuggestingEntries] = useState(false);
 
   const entryById = useMemo(() => new Map(entries.map((entry) => [entry.id, entry])), [entries]);
+  const entryByTitle = useMemo(() => new Map(entries.map((entry) => [entry.title.toLowerCase(), entry])), [entries]);
   const outgoingRelations = selectedEntry
     ? relations.filter((relation) => relation.fromEntryId === selectedEntry.id)
     : [];
@@ -54,6 +80,24 @@ export function RightContextPanel({
   const relationOptions = selectedEntry
     ? entries.filter((entry) => entry.id !== selectedEntry.id && !outgoingTargetIds.has(entry.id))
     : [];
+
+  const selectedEntryContent = selectedEntry
+    ? [
+        contentFromBlocks(ownerBlocks(contentBlocks, "entry", selectedEntry.id), selectedEntry.content),
+        ...(selectedEntry.entryType === "book"
+          ? bookPages
+              .filter((page) => page.entryId === selectedEntry.id)
+              .sort((a, b) => a.pageOrder - b.pageOrder)
+              .map((page) =>
+                [`Page: ${page.title}`, contentFromBlocks(ownerBlocks(contentBlocks, "book_page", page.id), page.content)]
+                  .filter(Boolean)
+                  .join("\n"),
+              )
+          : []),
+      ]
+        .filter(Boolean)
+        .join("\n\n")
+    : "";
 
   const contextualGaps = selectedEntry
     ? knowledgeGaps.filter((gap) => gap.entryId === selectedEntry.id)
@@ -90,6 +134,227 @@ export function RightContextPanel({
     setNewGapTitle("");
     setNewGapNote("");
   };
+
+  const suggestRelations = async (mode: "manual" | "auto" = "manual") => {
+    if (!selectedEntry) {
+      return;
+    }
+    setRelationSuggestions([]);
+    setRelationAIError(null);
+    setAutoRelationMessage(mode === "auto" ? "Looking for related entries automatically..." : "");
+    setIsSuggestingRelations(true);
+    try {
+      const settings = getAISettingsForAction();
+      const existingTitles = relationOptions.map((entry) => entry.title);
+      const result = await getConfiguredAIProvider().generateText({
+        systemPrompt: relationSystemPrompt,
+        userPrompt: relationPrompt({ entry: selectedEntry, content: selectedEntryContent, existingTitles }),
+        model: settings.modelName,
+        temperature: settings.temperature,
+      });
+      const parsed = parseJSONArray<RelationSuggestion>(cleanModelText(result.text));
+      const valid = parsed
+        .map((suggestion) => ({
+          targetTitle: String(suggestion.targetTitle || "").trim(),
+          relationType: String(suggestion.relationType || "related to").trim() || "related to",
+          reason: String(suggestion.reason || "").trim(),
+        }))
+        .filter((suggestion) => {
+          const target = entryByTitle.get(suggestion.targetTitle.toLowerCase());
+          return target && target.id !== selectedEntry.id && !outgoingTargetIds.has(target.id);
+        });
+
+      if (mode === "auto") {
+        let addedCount = 0;
+        for (const suggestion of valid) {
+          const target = entryByTitle.get(suggestion.targetTitle.toLowerCase());
+          if (!target) {
+            continue;
+          }
+          await onAddRelation({
+            fromEntryId: selectedEntry.id,
+            toEntryId: target.id,
+            relationType: suggestion.relationType || "related to",
+            note: suggestion.reason,
+          });
+          addedCount += 1;
+        }
+        setRelationSuggestions([]);
+        setAutoRelationMessage(
+          addedCount > 0
+            ? `Auto-related ${addedCount} entr${addedCount === 1 ? "y" : "ies"}.`
+            : "No new related entries found automatically.",
+        );
+        return;
+      }
+
+      setRelationSuggestions(valid);
+      if (valid.length === 0) {
+        setRelationAIError("No usable relation suggestions were returned from the existing entry list.");
+      }
+    } catch (error) {
+      setRelationAIError(errorMessage(error));
+      if (mode === "auto") {
+        setAutoRelationMessage("");
+      }
+    } finally {
+      setIsSuggestingRelations(false);
+    }
+  };
+
+
+  const acceptRelationSuggestion = async (suggestion: RelationSuggestion) => {
+    if (!selectedEntry) {
+      return;
+    }
+    const target = entryByTitle.get(suggestion.targetTitle.toLowerCase());
+    if (!target) {
+      setRelationAIError("That suggested entry no longer exists.");
+      return;
+    }
+    await onAddRelation({
+      fromEntryId: selectedEntry.id,
+      toEntryId: target.id,
+      relationType: suggestion.relationType || "related to",
+      note: suggestion.reason,
+    });
+    setRelationSuggestions((current) => current.filter((item) => item !== suggestion));
+  };
+
+  const suggestEntries = async () => {
+    if (!selectedEntry) {
+      return;
+    }
+    setEntrySuggestions([]);
+    setEntryAIError(null);
+    setIsSuggestingEntries(true);
+    try {
+      const settings = getAISettingsForAction();
+      const existingTitleSet = new Set(entries.map((entry) => entry.title.trim().toLowerCase()));
+      const result = await getConfiguredAIProvider().generateText({
+        systemPrompt: entryCandidateSystemPrompt,
+        userPrompt: entryCandidatePrompt({
+          title: selectedEntry.title,
+          content: selectedEntryContent,
+          existingTitles: entries.map((entry) => entry.title),
+        }),
+        model: settings.modelName,
+        temperature: settings.temperature,
+      });
+      const parsed = parseJSONArray<EntryCandidateSuggestion>(cleanModelText(result.text));
+      const seenTitles = new Set<string>();
+      const valid = parsed
+        .map((suggestion) => {
+          const title = String(suggestion.title || "").trim();
+          return {
+            title,
+            reason: String(suggestion.reason || "").trim(),
+            category: String(suggestion.category || selectedEntry.category || "").trim(),
+            tags: Array.isArray(suggestion.tags)
+              ? suggestion.tags.map((tag) => String(tag).trim()).filter(Boolean).slice(0, 5)
+              : selectedEntry.tags.slice(0, 3),
+          };
+        })
+        .filter((suggestion) => {
+          const normalizedTitle = suggestion.title.toLowerCase();
+          if (!suggestion.title || existingTitleSet.has(normalizedTitle) || seenTitles.has(normalizedTitle)) {
+            return false;
+          }
+          seenTitles.add(normalizedTitle);
+          return true;
+        });
+      setEntrySuggestions(valid);
+      if (valid.length === 0) {
+        setEntryAIError("No new entry candidates were found outside the existing atlas titles.");
+      }
+    } catch (error) {
+      setEntryAIError(errorMessage(error));
+    } finally {
+      setIsSuggestingEntries(false);
+    }
+  };
+
+  const acceptEntrySuggestion = async (suggestion: EntryCandidateSuggestion) => {
+    if (!selectedEntry) {
+      return;
+    }
+    await onCreateEntryCandidate(
+      {
+        title: suggestion.title,
+        entryType: "entry",
+        content: suggestion.reason,
+        category: suggestion.category || selectedEntry.category,
+        tags: suggestion.tags ?? [],
+        timelineDate: "",
+        timelineNote: "",
+      },
+      selectedEntry.id,
+      suggestion.reason,
+    );
+    setEntrySuggestions((current) => current.filter((item) => item !== suggestion));
+  };
+
+  const suggestGaps = async () => {
+    if (!selectedEntry) {
+      return;
+    }
+    setGapSuggestions([]);
+    setGapAIError(null);
+    setIsSuggestingGaps(true);
+    try {
+      const settings = getAISettingsForAction();
+      const result = await getConfiguredAIProvider().generateText({
+        systemPrompt: gapSystemPrompt,
+        userPrompt: gapPrompt({ title: selectedEntry.title, content: selectedEntryContent }),
+        model: settings.modelName,
+        temperature: settings.temperature,
+      });
+      const parsed = parseJSONArray<KnowledgeGapSuggestion>(cleanModelText(result.text));
+      const valid = parsed
+        .map((suggestion) => ({
+          title: String(suggestion.title || "").trim(),
+          note: String(suggestion.note || "").trim(),
+        }))
+        .filter((suggestion) => suggestion.title);
+      setGapSuggestions(valid);
+      if (valid.length === 0) {
+        setGapAIError("No usable gap suggestions were returned.");
+      }
+    } catch (error) {
+      setGapAIError(errorMessage(error));
+    } finally {
+      setIsSuggestingGaps(false);
+    }
+  };
+
+  const acceptGapSuggestion = async (suggestion: KnowledgeGapSuggestion) => {
+    if (!selectedEntry) {
+      return;
+    }
+    await onAddKnowledgeGap({
+      entryId: selectedEntry.id,
+      title: suggestion.title,
+      note: suggestion.note,
+      status: "open",
+      resolvedEntryId: "",
+    });
+    setGapSuggestions((current) => current.filter((item) => item !== suggestion));
+  };
+
+  useEffect(() => {
+    if (!autoRelationRequest || !selectedEntry) {
+      return;
+    }
+    if (autoRelationRequest.entryId !== selectedEntry.id) {
+      return;
+    }
+    if (relationOptions.length === 0) {
+      setAutoRelationMessage("No other entries available for automatic related suggestions.");
+      return;
+    }
+    void suggestRelations("auto");
+  }, [autoRelationRequest?.nonce]);
+
 
   return (
     <aside className="context-panel" aria-label="Context panel">
@@ -136,6 +401,27 @@ export function RightContextPanel({
                 Add Relation
               </button>
             </div>
+
+            <button className="button button--subtle button--full" type="button" onClick={() => suggestRelations("manual")} disabled={isSuggestingRelations}>
+              <Sparkles size={16} />
+              {isSuggestingRelations ? "Suggesting..." : "Suggest Relations"}
+            </button>
+            {autoRelationMessage ? <div className="status-note">{autoRelationMessage}</div> : null}
+            {relationAIError ? <div className="status-note status-note--error">{relationAIError}</div> : null}
+            {relationSuggestions.length ? (
+              <div className="suggestion-list">
+                {relationSuggestions.map((suggestion) => (
+                  <SuggestionCard
+                    key={suggestion.targetTitle + suggestion.relationType}
+                    title={suggestion.targetTitle}
+                    subtitle={suggestion.relationType}
+                    body={suggestion.reason}
+                    onAccept={() => acceptRelationSuggestion(suggestion)}
+                    onReject={() => setRelationSuggestions((current) => current.filter((item) => item !== suggestion))}
+                  />
+                ))}
+              </div>
+            ) : null}
 
             <div className="context-list">
               {outgoingRelations.length === 0 ? (
@@ -187,6 +473,33 @@ export function RightContextPanel({
 
           <section className="context-section">
             <div className="context-section-title">
+              <Sparkles size={16} />
+              <h3>Suggested Entries</h3>
+            </div>
+
+            <button className="button button--subtle button--full" type="button" onClick={suggestEntries} disabled={isSuggestingEntries}>
+              <Sparkles size={16} />
+              {isSuggestingEntries ? "Suggesting..." : "Suggest Entries"}
+            </button>
+            {entryAIError ? <div className="status-note status-note--error">{entryAIError}</div> : null}
+            {entrySuggestions.length ? (
+              <div className="suggestion-list">
+                {entrySuggestions.map((suggestion) => (
+                  <SuggestionCard
+                    key={suggestion.title}
+                    title={suggestion.title}
+                    subtitle={suggestion.category}
+                    body={suggestion.reason}
+                    onAccept={() => acceptEntrySuggestion(suggestion)}
+                    onReject={() => setEntrySuggestions((current) => current.filter((item) => item !== suggestion))}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </section>
+
+          <section className="context-section">
+            <div className="context-section-title">
               <XCircle size={16} />
               <h3>Knowledge Gaps</h3>
             </div>
@@ -207,6 +520,25 @@ export function RightContextPanel({
                 Add Gap
               </button>
             </div>
+
+            <button className="button button--subtle button--full" type="button" onClick={suggestGaps} disabled={isSuggestingGaps}>
+              <Sparkles size={16} />
+              {isSuggestingGaps ? "Suggesting..." : "Suggest Gaps"}
+            </button>
+            {gapAIError ? <div className="status-note status-note--error">{gapAIError}</div> : null}
+            {gapSuggestions.length ? (
+              <div className="suggestion-list">
+                {gapSuggestions.map((suggestion) => (
+                  <SuggestionCard
+                    key={suggestion.title}
+                    title={suggestion.title}
+                    body={suggestion.note}
+                    onAccept={() => acceptGapSuggestion(suggestion)}
+                    onReject={() => setGapSuggestions((current) => current.filter((item) => item !== suggestion))}
+                  />
+                ))}
+              </div>
+            ) : null}
 
             <GapList
               title="Open"
@@ -234,6 +566,34 @@ export function RightContextPanel({
         </div>
       )}
     </aside>
+  );
+}
+
+interface SuggestionCardProps {
+  title: string;
+  subtitle?: string;
+  body?: string;
+  onAccept: () => Promise<void> | void;
+  onReject: () => void;
+}
+
+function SuggestionCard({ title, subtitle, body, onAccept, onReject }: SuggestionCardProps) {
+  return (
+    <div className="suggestion-card">
+      <div>
+        <strong>{title}</strong>
+        {subtitle ? <span>{subtitle}</span> : null}
+        {body ? <p>{body}</p> : null}
+      </div>
+      <div className="gap-actions">
+        <button className="mini-icon-button" type="button" onClick={onAccept} title="Accept suggestion">
+          Accept
+        </button>
+        <button className="mini-icon-button" type="button" onClick={onReject} title="Discard suggestion">
+          Reject
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -438,4 +798,14 @@ function KnowledgeGapItem({ gap, entries, onUpdate, onDelete, onSelectEntry }: K
       </div>
     </div>
   );
+}
+
+function errorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "Something went wrong.";
 }

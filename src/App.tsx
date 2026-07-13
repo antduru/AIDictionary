@@ -50,6 +50,7 @@ export default function App() {
   const [tagFilter, setTagFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [autoRelationRequest, setAutoRelationRequest] = useState<{ entryId: string; nonce: number } | null>(null);
 
   const selectedEntry = useMemo(
     () => data.entries.find((entry) => entry.id === selectedEntryId) ?? null,
@@ -102,6 +103,38 @@ export default function App() {
       .catch((err: unknown) => setError(errorMessage(err)))
       .finally(() => setIsLoading(false));
   }, [loadData]);
+
+  const queueAutoRelationSuggestion = (entryId: string) => {
+    setAutoRelationRequest({ entryId, nonce: Date.now() });
+  };
+
+  const handleCreateEntryCandidate = async (input: EntryInput, sourceEntryId: string, reason: string) => {
+    let createdId: string | null = null;
+    await runMutation(async () => {
+      const created = await lexiconRepository.createEntry(input);
+      createdId = created.id;
+      await lexiconRepository.replaceContentBlocks("entry", created.id, [
+        {
+          blockType: "markdown",
+          content: reason ? `Suggested from atlas context.\n\n${reason}` : "Suggested from atlas context.",
+          metadata: "{}",
+          blockOrder: 1,
+        },
+      ]);
+      await lexiconRepository.createRelation({
+        fromEntryId: sourceEntryId,
+        toEntryId: created.id,
+        relationType: "related to",
+        note: reason,
+      });
+    }, sourceEntryId);
+    if (createdId) {
+      queueAutoRelationSuggestion(sourceEntryId);
+    }
+  };
+
+  const hasMeaningfulBlocks = (blocks: ContentBlockInput[]) =>
+    blocks.some((block) => block.blockType !== "divider" && block.content.trim());
 
   const runMutation = async (operation: () => Promise<void>, nextSelectedId?: string | null) => {
     setError(null);
@@ -165,6 +198,9 @@ export default function App() {
     }, entryId);
     setEditingEntryId(null);
     setOpenBookId((current) => (input.entryType === "book" ? current : null));
+    if (input.title.trim() || input.content.trim() || hasMeaningfulBlocks(blocks)) {
+      queueAutoRelationSuggestion(entryId);
+    }
   };
 
   const handleDeleteEntry = async (entryId: string) => {
@@ -187,6 +223,9 @@ export default function App() {
       await lexiconRepository.updateBookPage(pageId, input);
       await lexiconRepository.replaceContentBlocks("book_page", pageId, blocks);
     }, input.entryId);
+    if (input.title.trim() || input.content.trim() || hasMeaningfulBlocks(blocks)) {
+      queueAutoRelationSuggestion(input.entryId);
+    }
   };
 
   const handleDeletePage = async (pageId: string) => {
@@ -415,8 +454,12 @@ export default function App() {
             <RightContextPanel
               selectedEntry={selectedEntry}
               entries={data.entries}
+              bookPages={data.bookPages}
               relations={data.relations}
               knowledgeGaps={data.knowledgeGaps}
+              contentBlocks={data.contentBlocks}
+              autoRelationRequest={autoRelationRequest}
+              onCreateEntryCandidate={handleCreateEntryCandidate}
               onAddRelation={handleAddRelation}
               onUpdateRelation={handleUpdateRelation}
               onDeleteRelation={handleDeleteRelation}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Sparkles } from "lucide-react";
+import { entryTypeLabels, entryTypeOptions } from "../types";
 import type { ContentBlock, ContentBlockInput, Entry, EntryInput, EntryType } from "../types";
 import { BlockEditor } from "./BlockEditor";
 import { AIDraftPanel } from "./AIDraftPanel";
@@ -103,8 +104,11 @@ export function EntryEditor({ entry, blocks, onSave, onCancel }: EntryEditorProp
             value={entryType}
             onChange={(event) => setEntryType(event.target.value as EntryType)}
           >
-            <option value="entry">Entry</option>
-            <option value="book">Book</option>
+            {entryTypeOptions.map((type) => (
+              <option value={type} key={type}>
+                {entryTypeLabels[type]}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -127,7 +131,7 @@ export function EntryEditor({ entry, blocks, onSave, onCancel }: EntryEditorProp
           <input
             value={timelineDate}
             onChange={(event) => setTimelineDate(event.target.value)}
-            placeholder="2021, 1600, modern ML"
+            placeholder="2012, 2020, 2023"
           />
         </label>
 

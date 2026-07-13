@@ -7,6 +7,7 @@ No AI features are included in this MVP. There are no LLM calls, embeddings, sem
 Current organization primitives:
 
 - Flexible block-based content for entries and mini-book pages
+- Flexible item types including entry, book, model, paper, metric, dataset, task, method, concept, and benchmark
 - Custom typed relations between entries
 - Automatic backlinks derived from relations
 - Manual knowledge gaps with open/resolved status
@@ -34,7 +35,7 @@ npm install
 npm run tauri:dev
 ```
 
-This starts Vite and opens the Tauri desktop app. The SQLite database is created in the app data directory on first launch and is seeded with sample CLIP-related entries.
+This starts Vite and opens the Tauri desktop app. The SQLite database is created in the app data directory on first launch and is seeded with sample Computer Vision research entries.
 
 For frontend-only inspection, you can run:
 
@@ -52,6 +53,19 @@ npm run tauri:build
 
 Build artifacts are emitted by Tauri under `src-tauri/target/release/bundle`.
 
+## Building Windows Installer With GitHub Actions
+
+1. Push this repository, including `.github/workflows/build-windows.yml`, to GitHub.
+2. Open the repository on GitHub and go to `Actions`.
+3. Select `Build Windows App`.
+4. Click `Run workflow`.
+5. Wait for the Windows build to finish.
+6. Download the artifact named `lexicon-os-windows`.
+7. Extract the downloaded zip.
+8. Run the generated `.exe` or `.msi` installer.
+
+Because this early build is unsigned, Windows SmartScreen may show a warning during testing.
+
 ## Concept
 
 Lexicon OS treats a personal knowledge base as an atlas book:
@@ -63,4 +77,4 @@ Lexicon OS treats a personal knowledge base as an atlas book:
 - The left sidebar switches between Atlas, Library, Map, and Settings.
 - The right panel stays contextual with manually curated related entries and knowledge gaps.
 
-The data model is intentionally flexible. Entries support ordered content blocks, Markdown blocks, optional categories, tags, manual relations, trails, timeline metadata, and manual knowledge gaps without requiring a strict definition/example/source template.
+The data model is intentionally flexible. Atlas items support ordered content blocks, Markdown blocks, optional categories, tags, manual relations, trails, timeline metadata, and manual knowledge gaps without requiring a strict definition/example/source template.

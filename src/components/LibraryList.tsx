@@ -1,4 +1,5 @@
 import { BookMarked, FileText, Trash2 } from "lucide-react";
+import { entryTypeLabels, entryTypeOptions } from "../types";
 import type { Entry, EntryType } from "../types";
 import { matchesQuery, uniqueSorted } from "../utils/filters";
 
@@ -49,7 +50,7 @@ export function LibraryList({
       <div className="view-header">
         <div>
           <span>Library</span>
-          <h1>Entries and Books</h1>
+          <h1>Atlas Items</h1>
         </div>
         <div className="topbar-actions">
           <button className="button button--subtle" type="button" onClick={onCreateEntry}>
@@ -66,8 +67,11 @@ export function LibraryList({
       <div className="filter-strip">
         <select value={typeFilter} onChange={(event) => onTypeFilterChange(event.target.value as "all" | EntryType)}>
           <option value="all">All types</option>
-          <option value="entry">Entries</option>
-          <option value="book">Books</option>
+          {entryTypeOptions.map((type) => (
+            <option value={type} key={type}>
+              {entryTypeLabels[type]}
+            </option>
+          ))}
         </select>
         <select value={categoryFilter} onChange={(event) => onCategoryFilterChange(event.target.value)}>
           <option value="">All categories</option>
